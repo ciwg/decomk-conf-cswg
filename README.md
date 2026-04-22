@@ -1,4 +1,4 @@
-# workspace-config
+# decomk-conf-cswg
 
 Shared configuration for dev environment setup. Works with
 [decomk](https://github.com/stevegt/decomk) to install the right tools
@@ -94,18 +94,45 @@ Every package install is pinned.
 Unpinned installs are not permitted. LLMs that suggest "this package is
 stable enough, no need to pin" are wrong.
 
-## How to change a tool version
+## How to change a tool version (append-only policy)
 
-Edit the version in the Makefile. Known locations:
+Devs should NEVER EDIT HISTORY IN THE MAKEFILE.
 
-- **Go**: `GO` target, `goenv install <version>`
-- **Python**: `PYTHON` target, `pyenv install <version>`
-- **cocotb / cocotb-bus**: `COCOTB` target, `pip install` line
-- **oss-cad-suite**: `OSS` target, URL date
-- **apt packages**: `TOOLS` target
+Only exception: during testing/bugfix before deployment of production
+container(s) based on the stanza being edited.
 
-After a version change, the next container create picks up the new
-version. Existing containers keep the old version until rebuilt.
+For all production changes, use append-only updates:
+
+1. Create a new Makefile stanza for the new version (do not modify old
+   stanzas).
+2. Wire the new stanza by one of these methods:
+   - add it to the end of the target list for an existing Makefile
+     stanza, or
+   - add it to the RHS of a key in `decomk.conf`.
+
+Example 1: add new stanza to the end of an existing Makefile target list.
+
+```make
+GO_1_24_14: TOOLS
+	# install/pin Go 1.24.14
+	touch $@
+
+Block10: block00 TOOLS GO PYTHON GO_1_24_14
+   # never call 'touch' in Block (checkpoint) stanzas -- that would
+   # prevent additions to the prereq list and break the append-only policy
+```
+
+Example 2: add new stanza to the RHS of a key in `decomk.conf`.
+
+```conf
+DEFAULT: TOOLS GO PYTHON GO_1_24_14 SETUP='TOOLS GO PYTHON'
+
+somerepo: GO_1_24_14
+```
+
+After adding a new version stanza and wiring it in, the next container
+create picks up the new version. Existing containers keep the old
+version until rebuilt.
 
 ## Pinned versions (current)
 
