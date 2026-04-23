@@ -16,7 +16,7 @@ RUN apt-get update \
       golang-go \
       make \
       sudo \
- && rm -rf /var/lib/apt/lists/*
+      openssh-server 
 
 RUN mkdir -p /var/decomk /var/log/decomk \
  && chown -R vscode:vscode /var/decomk /var/log/decomk
