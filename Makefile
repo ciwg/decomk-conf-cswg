@@ -39,9 +39,8 @@ postCreate: Block10 postCreateUserDemo
 # Shared baseline block layering (checkpoint-friendly)
 # -----------------------------------------------------------------------------
 
-# Block00 would normally be the build for a baseline custom image at
-# GHCR -- for now we're just using a hello demo as a placeholder
-Block00: hello-demo
+# Block00 is a mostly-vanilla ubuntu image with minimal customization.
+Block00: hello-test
 
 # Intent: Keep pinned apt packages in one-stanza-per-version targets so
 # version history is append-only and each upgrade is an additive Block10 prereq.
@@ -81,9 +80,8 @@ GUIDesktop:
 >  echo "GUIDesktop target requested with DEVCONTAINER_GUI=$(DEVCONTAINER_GUI)"; \
 >fi
 
-hello-demo:
+hello-test:
 >bash $(CONF_BIN_DIR)/hello-world.sh "hello-common" "$(HELLO_TEXT)" "$(DECOMK_STAGE0_PHASE)" "$(DEVCONTAINER_GUI)"
->@touch $@
 
 # -----------------------------------------------------------------------------
 # Base tools and language runtimes
