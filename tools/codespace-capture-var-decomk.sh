@@ -16,6 +16,7 @@ Options:
                              Default: decomk-capture-<UTC timestamp>
   --devcontainer-path PATH   devcontainer.json path for codespace create.
   --machine NAME             Machine type for codespace create.
+                             Default: auto-resolve non-interactively.
   --location NAME            Codespace region (EastUs, WestEurope, etc).
   --idle-timeout DURATION    e.g. 30m, 1h.
   --retention-period DUR     e.g. 1h, 72h.
@@ -73,6 +74,46 @@ infer_branch_from_git() {
   else
     printf '%s\n' "main"
   fi
+}
+
+infer_machine_from_existing_codespaces() {
+  local repo="$1"
+
+  gh codespace list --repo "$repo" --json machineName,lastUsedAt,createdAt \
+    --jq '.[] | select(.machineName != null and .machineName != "") | [(.lastUsedAt // ""), (.createdAt // ""), .machineName] | @tsv' \
+    | sort -r \
+    | head -n1 \
+    | awk -F '\t' '{print $3}'
+}
+
+infer_machine_from_api() {
+  local repo="$1"
+  local repo_id
+  repo_id="$(gh api "repos/${repo}" --jq '.id' 2>/dev/null || true)"
+  if [[ -z "$repo_id" ]]; then
+    return 1
+  fi
+
+  gh api "user/codespaces/machines?repository_id=${repo_id}" --jq '.machines[]? | select(.name != null and .name != "") | .name' 2>/dev/null | head -n1
+}
+
+resolve_machine() {
+  local repo="$1"
+  local machine=""
+
+  machine="$(infer_machine_from_existing_codespaces "$repo" || true)"
+  if [[ -n "$machine" ]]; then
+    printf '%s\n' "$machine"
+    return 0
+  fi
+
+  machine="$(infer_machine_from_api "$repo" || true)"
+  if [[ -n "$machine" ]]; then
+    printf '%s\n' "$machine"
+    return 0
+  fi
+
+  return 1
 }
 
 wait_for_codespace_state() {
@@ -291,6 +332,15 @@ main() {
     branch="$(infer_branch_from_git)"
   fi
 
+  if [[ -z "$machine" ]]; then
+    machine="$(resolve_machine "$repo" || true)"
+  fi
+  if [[ -z "$machine" ]]; then
+    echo "ERROR: unable to resolve machine non-interactively for ${repo}" >&2
+    echo "Pass --machine <name> to avoid interactive machine selection prompts." >&2
+    return 1
+  fi
+
   local ts
   ts="$(date -u +%Y%m%d-%H%M%S)"
 
@@ -307,6 +357,7 @@ main() {
   echo "Creating codespace"
   echo "- repo:         $repo"
   echo "- branch:       $branch"
+  echo "- machine:      $machine"
   echo "- display_name: $display_name"
   echo "- out_dir:      $run_root"
 
