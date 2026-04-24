@@ -65,7 +65,7 @@ Block10: Block00 \
   libffi_dev_3_4_6_1build1 \
   liblzma_dev_5_6_1_really5_4_5_1ubuntu0_2 \
   golang_go_e2_1_22_2build1 \
-  python3_3_12_3_0ubuntu1
+  python3_3_12_3_0ubuntu2_1
 
 # -----------------------------------------------------------------------------
 # Repo-special feature targets
@@ -170,8 +170,8 @@ golang_go_e2_1_22_2build1: apt_index_noble_2026_04_23
 >apt-get install -y -qq golang-go=2:1.22~2build1
 >@touch $@
 
-python3_3_12_3_0ubuntu1: apt_index_noble_2026_04_23
->apt-get install -y -qq python3=3.12.3-0ubuntu1
+python3_3_12_3_0ubuntu2_1: apt_index_noble_2026_04_23
+>apt-get install -y -qq python3=3.12.3-0ubuntu2.1
 >@touch $@
 
 # -----------------------------------------------------------------------------
@@ -209,7 +209,7 @@ I2C: git_e1_2_43_0_1ubuntu7_3
 >fi
 >@touch $@
 
-COCOTB: python3_3_12_3_0ubuntu1 python3_pip_24_0_dfsg_1ubuntu1_3
+COCOTB: python3_3_12_3_0ubuntu2_1 python3_pip_24_0_dfsg_1ubuntu1_3
 >if python3 -c 'import cocotb' >/dev/null 2>&1; then \
 >  echo "cocotb already installed, skipping"; \
 >else \
