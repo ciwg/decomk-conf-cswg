@@ -10,13 +10,13 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-      bash \
-      ca-certificates \
-      git \
-      golang-go \
-      make \
-      sudo \
-      openssh-server 
+      bash=5.2.21-2ubuntu4 \
+      ca-certificates=20240203 \
+      git=1:2.43.0-1ubuntu7.3 \
+      golang-go=2:1.22~2build1 \
+      make=4.3-4.1build2 \
+      sudo=1.9.15p5-3ubuntu5.24.04.2 \
+      openssh-server=1:9.6p1-3ubuntu13.15
 
 RUN mkdir -p /var/decomk /var/log/decomk \
  && chown -R vscode:vscode /var/decomk /var/log/decomk
