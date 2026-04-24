@@ -6,8 +6,8 @@ set -euo pipefail
 # It demonstrates how Makefile targets can call scripts from the shared conf
 # repo and make changes to the devcontainer filesystem.
 
-# tee outputs to both stdout and a log file, so we can see the output in the terminal
-exec >(tee -a /tmp/hello-world.log) 2>&1
+ls -l /tmp/hello-world.log || true
+exec > /tmp/hello-world.log 2>&1
 
 target_name="${1:-}"
 hello_text="${2:-Hello from bin/hello-world.sh}"
