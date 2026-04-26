@@ -6,8 +6,8 @@ set -euo pipefail
 # It demonstrates how Makefile targets can call scripts from the shared conf
 # repo and make changes to the devcontainer filesystem.
 
-ls -l /tmp/hello-world.log || true
-exec > /tmp/hello-world.log 2>&1
+# ls -l /tmp/hello-world.log || true
+exec >> /tmp/hello-world.log 2>&1
 
 target_name="${1:-}"
 hello_text="${2:-Hello from bin/hello-world.sh}"
@@ -17,6 +17,7 @@ if [[ -z "$target_name" ]]; then
   exit 2
 fi
 
+echo "HELLO $(date)"
 echo "HELLO target=${target_name}"
 echo "HELLO message=${hello_text}"
 echo "HELLO phase=${DECOMK_STAGE0_PHASE:-<unset>}"
