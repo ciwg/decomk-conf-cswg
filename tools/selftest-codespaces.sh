@@ -6,7 +6,7 @@ usage() {
 Create a codespace, capture /var/decomk, and store results under /tmp.
 
 Usage:
-  tools/codespace-capture-var-decomk.sh [options]
+  tools/selftest-codespaces.sh [options]
 
 Options:
   --repo OWNER/REPO          Repository to create codespace from.
@@ -26,8 +26,8 @@ Options:
   -h, --help                 Show help.
 
 Examples:
-  tools/codespace-capture-var-decomk.sh
-  tools/codespace-capture-var-decomk.sh --repo ciwg/decomk-conf-cswg --branch main --delete-after
+  tools/selftest-codespaces.sh
+  tools/selftest-codespaces.sh --repo ciwg/decomk-conf-cswg --branch main --delete-after
 USAGE
 }
 
