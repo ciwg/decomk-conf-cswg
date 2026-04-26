@@ -6,10 +6,11 @@
 //   3) remove the active need for `.devcontainer/Dockerfile`.
 {
   "name": "decomk-conf-cswg",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "image": "decomk-conf-cswg:testing",
+//  "build": {
+//    "dockerfile": "Dockerfile",
+//    "context": ".."
+//  },
     "containerEnv": {
       "DECOMK_HOME": "/var/decomk",
       "DECOMK_LOG_DIR": "/var/log/decomk",
