@@ -31,6 +31,24 @@ Examples:
 USAGE
 }
 
+SELFTEST_RESULT="FAIL"
+SELFTEST_RUN_ROOT=""
+
+finalize_selftest() {
+  local exit_code="$1"
+  local status="PASS"
+
+  if [[ "$SELFTEST_RESULT" != "PASS" || "$exit_code" -ne 0 ]]; then
+    status="FAIL"
+  fi
+
+  echo "SELFTEST ${status}"
+  if [[ -n "$SELFTEST_RUN_ROOT" ]]; then
+    echo "$SELFTEST_RUN_ROOT"
+  fi
+}
+trap 'finalize_selftest "$?"' EXIT
+
 require_cmd() {
   local cmd="$1"
   if ! command -v "$cmd" >/dev/null 2>&1; then
@@ -68,7 +86,10 @@ infer_repo_from_git() {
 
 infer_branch_from_git() {
   local branch
-  branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || true)"
+  if ! branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"; then
+    branch=""
+  fi
+
   if [[ -n "$branch" && "$branch" != "HEAD" ]]; then
     printf '%s\n' "$branch"
   else
@@ -89,7 +110,10 @@ infer_machine_from_existing_codespaces() {
 infer_machine_from_api() {
   local repo="$1"
   local repo_id
-  repo_id="$(gh api "repos/${repo}" --jq '.id' 2>/dev/null || true)"
+  if ! repo_id="$(gh api "repos/${repo}" --jq '.id' 2>/dev/null)"; then
+    return 1
+  fi
+
   if [[ -z "$repo_id" ]]; then
     return 1
   fi
@@ -101,13 +125,17 @@ resolve_machine() {
   local repo="$1"
   local machine=""
 
-  machine="$(infer_machine_from_existing_codespaces "$repo" || true)"
+  if ! machine="$(infer_machine_from_existing_codespaces "$repo")"; then
+    machine=""
+  fi
   if [[ -n "$machine" ]]; then
     printf '%s\n' "$machine"
     return 0
   fi
 
-  machine="$(infer_machine_from_api "$repo" || true)"
+  if ! machine="$(infer_machine_from_api "$repo")"; then
+    machine=""
+  fi
   if [[ -n "$machine" ]]; then
     printf '%s\n' "$machine"
     return 0
@@ -125,7 +153,12 @@ wait_for_codespace_state() {
   start="$(date +%s)"
 
   while true; do
-    state="$({ gh codespace list --json name,state --jq ".[] | select(.name == \"${codespace_name}\") | .state" || true; } | head -n1)"
+    state=""
+    if state="$(gh codespace list --json name,state --jq ".[] | select(.name == \"${codespace_name}\") | .state" 2>/dev/null)"; then
+      state="$(printf '%s\n' "$state" | head -n1)"
+    else
+      state=""
+    fi
 
     if [[ "$state" == "$desired_state" ]]; then
       return 0
@@ -198,14 +231,33 @@ capture_var_decomk() {
 
   mkdir -p "$capture_dir"
 
+  local tarball="$capture_dir/decomk.tgz"
   if gh codespace cp --codespace "$codespace_name" --recursive "remote:/var/decomk" "$capture_dir/"; then
-    echo "cp"
-    return 0
+    if [[ -d "$capture_dir/decomk" ]]; then
+      echo "cp"
+      return 0
+    fi
+    echo "ERROR: copy reported success but expected directory is missing: $capture_dir/decomk" >&2
+    return 1
   fi
 
-  local tarball="$capture_dir/decomk.tgz"
-  gh codespace ssh --codespace "$codespace_name" -- 'set -euo pipefail; test -d /var/decomk; sudo tar -C /var -czf - decomk' >"$tarball"
-  tar -xzf "$tarball" -C "$capture_dir"
+  if ! gh codespace ssh --codespace "$codespace_name" -- 'set -euo pipefail; test -d /var/decomk; sudo tar -C /var -czf - decomk' >"$tarball"; then
+    echo "ERROR: ssh/tar fallback failed to capture /var/decomk" >&2
+    return 1
+  fi
+  if [[ ! -s "$tarball" ]]; then
+    echo "ERROR: ssh/tar fallback produced an empty archive: $tarball" >&2
+    return 1
+  fi
+  if ! tar -xzf "$tarball" -C "$capture_dir"; then
+    echo "ERROR: failed to extract capture archive: $tarball" >&2
+    return 1
+  fi
+  if [[ ! -d "$capture_dir/decomk" ]]; then
+    echo "ERROR: extracted capture archive missing expected path: $capture_dir/decomk" >&2
+    return 1
+  fi
+
   echo "ssh-tar"
 }
 
@@ -242,6 +294,50 @@ if [[ -d /var/decomk ]]; then
   find /var/decomk -maxdepth 3 -printf "%M %u:%g %s %TY-%Tm-%TdT%TH:%TM:%TS %p\n" | sort
 fi
 ' >"$out_file"
+}
+
+capture_codespace_logs() {
+  local codespace_name="$1"
+  local out_file="$2"
+  local err_file="$3"
+
+  gh codespace logs --codespace "$codespace_name" >"$out_file" 2>"$err_file"
+}
+
+evaluate_capture() {
+  local capture_dir="$1"
+  local remote_info_file="$2"
+  local codespace_logs_rc="$3"
+  local remote_info_rc="$4"
+  local failed=0
+
+  if [[ ! -d "$capture_dir/decomk" ]]; then
+    echo "missing captured directory: $capture_dir/decomk"
+    failed=1
+  fi
+
+  if [[ -f "$capture_dir/decomk.tgz" && ! -s "$capture_dir/decomk.tgz" ]]; then
+    echo "empty fallback archive: $capture_dir/decomk.tgz"
+    failed=1
+  fi
+
+  if [[ "$remote_info_rc" -ne 0 ]]; then
+    echo "remote-info capture failed (rc=$remote_info_rc)"
+    failed=1
+  elif grep -q '^/var/decomk not found$' "$remote_info_file"; then
+    echo "remote environment reports '/var/decomk not found'"
+    failed=1
+  fi
+
+  if [[ "$codespace_logs_rc" -ne 0 ]]; then
+    echo "codespace logs capture failed (rc=$codespace_logs_rc)"
+    failed=1
+  fi
+
+  if [[ "$failed" -ne 0 ]]; then
+    return 1
+  fi
+  return 0
 }
 
 main() {
@@ -309,6 +405,7 @@ main() {
         shift
         ;;
       -h|--help)
+        SELFTEST_RESULT="PASS"
         usage
         exit 0
         ;;
@@ -321,7 +418,9 @@ main() {
   done
 
   if [[ -z "$repo" ]]; then
-    repo="$(infer_repo_from_git || true)"
+    if ! repo="$(infer_repo_from_git)"; then
+      repo=""
+    fi
   fi
   if [[ -z "$repo" ]]; then
     echo "ERROR: unable to infer repo; pass --repo OWNER/REPO" >&2
@@ -333,7 +432,9 @@ main() {
   fi
 
   if [[ -z "$machine" ]]; then
-    machine="$(resolve_machine "$repo" || true)"
+    if ! machine="$(resolve_machine "$repo")"; then
+      machine=""
+    fi
   fi
   if [[ -z "$machine" ]]; then
     echo "ERROR: unable to resolve machine non-interactively for ${repo}" >&2
@@ -351,6 +452,7 @@ main() {
   local run_root
   run_root="${out_root%/}/codespace-var-decomk-${ts}"
   mkdir -p "$run_root"
+  SELFTEST_RUN_ROOT="$run_root"
 
   local create_log="$run_root/create.log"
 
@@ -379,7 +481,18 @@ main() {
   local capture_method
   capture_method="$(capture_var_decomk "$codespace_name" "$capture_dir")"
 
-  capture_remote_info "$codespace_name" "$run_root/remote-info.txt" || true
+  local remote_info_file="$run_root/remote-info.txt"
+  local remote_info_rc=0
+  if ! capture_remote_info "$codespace_name" "$remote_info_file"; then
+    remote_info_rc=$?
+  fi
+
+  local codespace_logs_file="$run_root/codespace.log"
+  local codespace_logs_err_file="$run_root/codespace.log.err"
+  local codespace_logs_rc=0
+  if ! capture_codespace_logs "$codespace_name" "$codespace_logs_file" "$codespace_logs_err_file"; then
+    codespace_logs_rc=$?
+  fi
 
   {
     echo "timestamp_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -389,17 +502,37 @@ main() {
     echo "codespace_name=$codespace_name"
     echo "capture_method=$capture_method"
     echo "capture_dir=$capture_dir"
+    echo "remote_info_file=$remote_info_file"
+    echo "remote_info_rc=$remote_info_rc"
+    echo "codespace_logs_file=$codespace_logs_file"
+    echo "codespace_logs_err_file=$codespace_logs_err_file"
+    echo "codespace_logs_rc=$codespace_logs_rc"
   } >"$run_root/metadata.env"
 
   local artifact_tgz="$run_root/decomk-capture.tgz"
   tar -C "$capture_dir" -czf "$artifact_tgz" .
 
+  local result_reasons_file="$run_root/result-reasons.txt"
+  if evaluate_capture "$capture_dir" "$remote_info_file" "$codespace_logs_rc" "$remote_info_rc" >"$result_reasons_file"; then
+    SELFTEST_RESULT="PASS"
+  else
+    SELFTEST_RESULT="FAIL"
+  fi
+
   echo
   echo "Capture complete"
   echo "- metadata:   $run_root/metadata.env"
-  echo "- remote-info:$run_root/remote-info.txt"
+  echo "- remote-info:$remote_info_file"
+  echo "- logs:       $codespace_logs_file"
+  echo "- logs err:   $codespace_logs_err_file"
   echo "- capture dir:$capture_dir"
   echo "- tarball:    $artifact_tgz"
+  if [[ "$SELFTEST_RESULT" == "FAIL" ]]; then
+    echo "- result:     FAIL"
+    echo "- reasons:    $result_reasons_file"
+  else
+    echo "- result:     PASS"
+  fi
 
   if [[ "$delete_after" == "true" ]]; then
     echo "Deleting codespace: $codespace_name"
