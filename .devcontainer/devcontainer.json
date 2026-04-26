@@ -5,18 +5,19 @@
 //   2) add an `image` stanza (for example `ghcr.io/<org>/<repo>:stable`),
 //   3) remove the active need for `.devcontainer/Dockerfile`.
 {
-  "name": "decomk conf producer",
+  "name": "decomk-conf-cswg",
   "build": {
     "dockerfile": "Dockerfile",
     "context": ".."
   },
-  "containerEnv": {
-    "DECOMK_HOME": "/var/decomk",
-    "DECOMK_LOG_DIR": "/var/log/decomk",
-    "DECOMK_TOOL_URI": "go:github.com/stevegt/decomk/cmd/decomk@latest",
-    "DECOMK_CONF_URI": "git:https://github.com/ciwg/decomk-conf-cswg.git?ref=main",
-    "DECOMK_FAIL_NOBOOT": "false"
-  },
+    "containerEnv": {
+      "DECOMK_HOME": "/var/decomk",
+      "DECOMK_LOG_DIR": "/var/log/decomk",
+      "DECOMK_TOOL_URI": "go:github.com/stevegt/decomk/cmd/decomk@latest",
+      "DECOMK_CONF_URI": "git:https://github.com/ciwg/decomk-conf-cswg.git?ref=main",
+      "DECOMK_FAIL_NOBOOT": "false"
+    },
+  "updateRemoteUserUID": false,
   "updateContentCommand": "bash .devcontainer/decomk-stage0.sh updateContent",
   "postCreateCommand": "bash .devcontainer/decomk-stage0.sh postCreate"
 }

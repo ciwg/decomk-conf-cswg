@@ -3,6 +3,11 @@
 This is a decomk configuration repository shared by all CSWG
 codespaces.
 
+This repository was bootstrapped by `decomk init -conf`.
+
+A decomk config repo provides shared bootstrap policy and execution logic for
+target repositories.
+
 ## Stability rule for this README
 
 Do not duplicate live, repo-specific configuration details from:
@@ -27,8 +32,8 @@ A decomk config repo provides shared bootstrap policy and execution logic:
 - `Makefile` contains the executable target graph decomk runs.
 - optional helper scripts under `bin/` support Makefile stanzas.
 
-Target repos invoke decomk stage-0 hooks, which call `decomk run <action>`
-(e.g. `updateContent` and `postCreate`).
+Target repositories invoke stage-0 lifecycle hooks that call
+`decomk run <action>` (for example, `updateContent` and `postCreate`).
 
 ## `decomk.conf` model (generic)
 
@@ -42,6 +47,22 @@ Target repos invoke decomk stage-0 hooks, which call `decomk run <action>`
 - Keep targets idempotent where appropriate.
 - Handle command failures explicitly; do not silently ignore errors.
 - Split shared baseline work from optional/special feature work.
+
+
+## How to customize
+
+1. Edit `decomk.conf`:
+   - keep `DEFAULT` for shared policy,
+   - add/adjust reusable keys and repo-specific keys,
+   - update action tuple composition (for example `updateContent='...'` and
+     `postCreate='...'`).
+2. Edit `Makefile`:
+   - replace demo targets with real setup targets,
+   - keep targets idempotent where appropriate for repeatable runs.
+3. Edit `.devcontainer/devcontainer.json` (producer workspace only):
+   - set the desired `DECOMK_CONF_URI`,
+   - set the desired `DECOMK_TOOL_URI`,
+   - keep lifecycle hooks pointed at `.devcontainer/decomk-stage0.sh`.
 
 ## Version and history policy
 
@@ -57,17 +78,21 @@ For production updates:
    action tuple values in `decomk.conf`.
 3. Keep prior versioned stanzas for auditability and rollback context.
 
-## Producer `.devcontainer` note
+## Producer `.devcontainer` workflow
 
-If this repo includes a producer workspace:
+The generated `.devcontainer/Dockerfile` and `build` stanza in
+`.devcontainer/devcontainer.json` are intended for the first image ("genesis")
+bootstrap only.
 
-- a `build` stanza is typically for genesis/bootstrap only,
-- after stabilization, switch to a pinned image reference,
-- long-term provisioning logic should live in `decomk.conf` and `Makefile`,
-  not only in Dockerfile layers.
+After the genesis image is stable:
+
+1. remove the `build` stanza from `.devcontainer/devcontainer.json`,
+2. replace it with an `image` stanza that points to your stable channel tag,
+3. remove `.devcontainer/Dockerfile` from active use in this repo.
+
+Long-term shared setup should live in `decomk.conf` and `Makefile`; Dockerfile
+content should remain minimal.
 
 ## Reference
-
-For decomk behavior and commands, see:
 
 - https://github.com/stevegt/decomk
