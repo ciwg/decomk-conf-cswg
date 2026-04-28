@@ -102,8 +102,8 @@ apt_index_noble_2026_04_23:
 >apt-get update -qq
 >@touch $@
 
-vim_2_9_1_0016_1ubuntu7_11: apt_index_noble_2026_04_23
->apt-get install -y -qq vim=2:9.1.0016-1ubuntu7.11
+vim_2_9_1_0016_1ubuntu7_12: apt_index_noble_2026_04_23
+>apt-get install -y -qq vim=2:9.1.0016-1ubuntu7.12
 >@touch $@
 
 neovim_0_9_5_6ubuntu2: apt_index_noble_2026_04_23
