@@ -51,27 +51,27 @@ Block00: hello-test
 # version history is append-only and each upgrade is an additive Block10 prereq.
 # Source: DI-002-20260423-184207 (TODO/002)
 Block10: Block00 \
-  vim_2_9_1_0016_1ubuntu7_11 \
-  neovim_0_9_5_6ubuntu2 \
-  openssh_client_e1_9_6p1_3ubuntu13_15 \
-  curl_8_5_0_2ubuntu10_8 \
-  wget_1_21_4_1ubuntu4_1 \
-  git_e1_2_43_0_1ubuntu7_3 \
-  jq_1_7_1_3ubuntu0_24_04_1 \
-  make_4_3_4_1build2 \
-  golang_go_e2_1_22_2build1 
+>vim_2_9_1_0016_1ubuntu7_11 \
+>neovim_0_9_5_6ubuntu2 \
+>openssh_client_e1_9_6p1_3ubuntu13_15 \
+>curl_8_5_0_2ubuntu10_8 \
+>wget_1_21_4_1ubuntu4_1 \
+>git_e1_2_43_0_1ubuntu7_3 \
+>jq_1_7_1_3ubuntu0_24_04_1 \
+>make_4_3_4_1build2 \
+>golang_go_e2_1_22_2build1 
 
 dubious-delete-me: Block10
-  python3_pip_24_0_dfsg_1ubuntu1_3 \
-  build_essential_12_10ubuntu1 \
-  libssl_dev_3_0_13_0ubuntu3_9 \
-  zlib1g_dev_e1_1_3_dfsg_3_1ubuntu2_1 \
-  libbz2_dev_1_0_8_5_1build0_1 \
-  libreadline_dev_8_2_4build1 \
-  libsqlite3_dev_3_45_1_1ubuntu2_5 \
-  libffi_dev_3_4_6_1build1 \
-  liblzma_dev_5_6_1_really5_4_5_1ubuntu0_2 \
-  python3_3_12_3_0ubuntu2_1
+>python3_pip_24_0_dfsg_1ubuntu1_3 \
+>build_essential_12_10ubuntu1 \
+>libssl_dev_3_0_13_0ubuntu3_9 \
+>zlib1g_dev_e1_1_3_dfsg_3_1ubuntu2_1 \
+>libbz2_dev_1_0_8_5_1build0_1 \
+>libreadline_dev_8_2_4build1 \
+>libsqlite3_dev_3_45_1_1ubuntu2_5 \
+>libffi_dev_3_4_6_1build1 \
+>liblzma_dev_5_6_1_really5_4_5_1ubuntu0_2 \
+>python3_3_12_3_0ubuntu2_1
 
 
 
