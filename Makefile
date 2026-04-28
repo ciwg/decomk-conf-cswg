@@ -59,6 +59,9 @@ Block10: Block00 \
   git_e1_2_43_0_1ubuntu7_3 \
   jq_1_7_1_3ubuntu0_24_04_1 \
   make_4_3_4_1build2 \
+  golang_go_e2_1_22_2build1 
+
+dubious-delete-me: Block10
   python3_pip_24_0_dfsg_1ubuntu1_3 \
   build_essential_12_10ubuntu1 \
   libssl_dev_3_0_13_0ubuntu3_9 \
@@ -68,8 +71,9 @@ Block10: Block00 \
   libsqlite3_dev_3_45_1_1ubuntu2_5 \
   libffi_dev_3_4_6_1build1 \
   liblzma_dev_5_6_1_really5_4_5_1ubuntu0_2 \
-  golang_go_e2_1_22_2build1 \
   python3_3_12_3_0ubuntu2_1
+
+
 
 # -----------------------------------------------------------------------------
 # Repo-special feature targets
