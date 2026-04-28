@@ -51,7 +51,7 @@ Block00: hello-test
 # version history is append-only and each upgrade is an additive Block10 prereq.
 # Source: DI-002-20260423-184207 (TODO/002)
 Block10: Block00 \
-  vim_2_9_1_0016_1ubuntu7_11 \
+  vim_2_9_1_0016_1ubuntu7_12 \
   neovim_0_9_5_6ubuntu2 \
   openssh_client_e1_9_6p1_3ubuntu13_15 \
   curl_8_5_0_2ubuntu10_8 \
