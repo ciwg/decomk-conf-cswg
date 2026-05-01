@@ -30,13 +30,13 @@ esac
 # so tool/config acquisition is explicit, deterministic, and shared between
 # generated examples and `decomk init` scaffolds.
 # Source: DI-001-20260412-170500 (TODO/001)
-DECOMK_HOME="${DECOMK_HOME:-/var/decomk}"
-DECOMK_LOG_DIR="${DECOMK_LOG_DIR:-/var/log/decomk}"
+DECOMK_HOME="${DECOMK_HOME:?DECOMK_HOME must be set by the container environment}"
+DECOMK_LOG_DIR="${DECOMK_LOG_DIR:?DECOMK_LOG_DIR must be set by the container environment}"
 DECOMK_TOOL_URI="${DECOMK_TOOL_URI:-go:github.com/stevegt/decomk/cmd/decomk@latest}"
 DECOMK_CONF_URI="${DECOMK_CONF_URI:-}"
 DECOMK_REMOTE_USER="${DECOMK_REMOTE_USER:-}"
 DECOMK_REMOTE_UID="${DECOMK_REMOTE_UID:-}"
-DECOMK_FAIL_NOBOOT="${DECOMK_FAIL_NOBOOT:-false}"
+DECOMK_FAIL_NOBOOT="${DECOMK_FAIL_NOBOOT:?DECOMK_FAIL_NOBOOT must be set by devcontainer.json}"
 DECOMK_STAGE0_PHASE="$stage0_phase"
 
 export DECOMK_HOME DECOMK_LOG_DIR DECOMK_TOOL_URI DECOMK_CONF_URI DECOMK_REMOTE_USER DECOMK_REMOTE_UID DECOMK_FAIL_NOBOOT

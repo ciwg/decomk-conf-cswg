@@ -18,8 +18,22 @@ SHELL := /bin/bash
 
 CONF_BIN_DIR := $(DECOMK_HOME)/conf/bin
 DEVCONTAINER_GUI ?= 0
+DECOMK_MAKE_USER ?= $(shell id -un)
+GUI_DISPLAY := :0
+GUI_VNC_PORT := 5900
+GUI_NOVNC_PORT := 6080
 
-.PHONY: all updateContent postCreate postCreateUserDemo
+# Intent: Keep the main target graph root-run under decomk while still allowing
+# explicit user-owned artifacts such as Desktop notes to be written correctly.
+# Source: DI-004-20260430-182956 (TODO/004)
+AS_DEV :=
+ifneq ($(strip $(DECOMK_REMOTE_USER)),)
+ifneq ($(DECOMK_MAKE_USER),$(DECOMK_REMOTE_USER))
+AS_DEV = runuser -u $(DECOMK_REMOTE_USER) --
+endif
+endif
+
+.PHONY: all updateContent postCreate GUIDesktop gui_runit_sync postCreateGUIDesktopNote postCreateUserDemo
 
 # `all` is for manual updates and testing
 all: updateContent
@@ -81,13 +95,195 @@ dubious-delete-me: Block10 \
 
 FPGA: OSS I2C COCOTB
 
-# XXX replace this with an actual GUI desktop config
-GUIDesktop:
->@if [[ "$(DEVCONTAINER_GUI)" == "1" ]]; then \
->  echo "GUI desktop mode enabled by tuple/env policy"; \
->else \
->  echo "GUIDesktop target requested with DEVCONTAINER_GUI=$(DEVCONTAINER_GUI)"; \
->fi
+# Intent: Keep GUI packages isolated from Block10 and reconcile GUI services in
+# the standard runit system paths on every GUI update so repo context controls
+# desktop behavior without moving init configuration into /var/decomk.
+# Source: DI-004-20260430-182956 (TODO/004)
+GUIDesktop: \
+  epiphany_browser_46_5_0ubuntu1 \
+  novnc_e1_1_3_0_2 \
+  openbox_3_6_1_12build5 \
+  websockify_0_10_0_dfsg1_5build2 \
+  x11_apps_7_7_11build3 \
+  x11_utils_7_7_6build2 \
+  x11vnc_0_9_16_10 \
+  xvfb_e2_21_1_12_1ubuntu1_5 \
+  gui_runit_sync
+>@echo "GUI desktop mode reconciled for $(DECOMK_REMOTE_USER)"
+
+# Intent: Reconcile the GUI services into /etc/sv and /etc/service on every
+# GUI update so the producer image can stay GUI-neutral while mob-sandbox gains
+# the needed desktop daemons through decomk context policy.
+# Source: DI-004-20260430-182956 (TODO/004)
+gui_runit_sync:
+>@remote_user="$(DECOMK_REMOTE_USER)"; \
+>runit_sv_dir="$(RUNIT_SV_DIR)"; \
+>runit_service_dir="$(RUNIT_SERVICE_DIR)"; \
+>runit_log_dir="$(RUNIT_LOG_DIR)"; \
+>if [[ -z "$$remote_user" ]]; then \
+>  echo "ERROR: DECOMK_REMOTE_USER must be set by the container/stage-0 environment"; \
+>  exit 1; \
+>fi; \
+>if [[ -z "$$runit_sv_dir" || -z "$$runit_service_dir" || -z "$$runit_log_dir" ]]; then \
+>  echo "ERROR: RUNIT_SV_DIR, RUNIT_SERVICE_DIR, and RUNIT_LOG_DIR must be set by the container environment"; \
+>  exit 1; \
+>fi; \
+>remote_uid="$$(id -u "$$remote_user" 2>/dev/null || true)"; \
+>user_home="$$(getent passwd "$$remote_user" | cut -d: -f6)"; \
+>if [[ -z "$$remote_uid" ]]; then \
+>  echo "ERROR: unable to resolve uid for $$remote_user"; \
+>  exit 1; \
+>fi; \
+>if [[ -z "$$user_home" ]]; then \
+>  echo "ERROR: unable to resolve home directory for $$remote_user"; \
+>  exit 1; \
+>fi; \
+>if ! command -v sv >/dev/null 2>&1 || ! command -v chpst >/dev/null 2>&1 || ! command -v svlogd >/dev/null 2>&1; then \
+>  echo "ERROR: runit tools are missing; rebuild and republish the producer image before running GUIDesktop"; \
+>  exit 1; \
+>fi; \
+>pid1="$$(ps -p 1 -o comm= | tr -d '[:space:]')"; \
+>if [[ "$$pid1" != "runsvdir" ]]; then \
+>  echo "ERROR: PID 1 is '$$pid1'; rebuild and republish the producer image so runsvdir is the entrypoint before running GUIDesktop"; \
+>  exit 1; \
+>fi; \
+>runtime_dir="/run/user/$$remote_uid"; \
+>install -d -m 0755 "$$runit_sv_dir" "$$runit_service_dir" "$$runit_log_dir"; \
+>install -d -o "$$remote_user" -g "$$remote_user" -m 0700 "$$runtime_dir"; \
+># Intent: Make the packaged noVNC web root land on the actual client page at
+># `/` because Ubuntu's `novnc` package ships `vnc.html` but not `index.html`.
+># Source: DI-004-20260430-194224 (TODO/004)
+>if [[ -d /usr/share/novnc ]] && [[ -e /usr/share/novnc/vnc.html ]] && [[ ! -e /usr/share/novnc/index.html ]]; then \
+>  ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html; \
+>fi; \
+>for service in xvfb openbox x11vnc novnc; do \
+>  install -d -m 0755 "$$runit_sv_dir/$$service/log"; \
+>  install -d -m 0755 "$$runit_log_dir/$$service"; \
+>done; \
+>cat > "$$runit_sv_dir/xvfb/run" <<EOF
+>#!/bin/bash
+>set -euo pipefail
+>exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir Xvfb $(GUI_DISPLAY) -screen 0 1920x1080x24 -ac -nolisten tcp
+>EOF
+>chmod 0755 "$$runit_sv_dir/xvfb/run"; \
+>cat > "$$runit_sv_dir/xvfb/log/run" <<EOF
+>#!/bin/bash
+>set -euo pipefail
+>exec svlogd -tt "$$runit_log_dir/xvfb"
+>EOF
+>chmod 0755 "$$runit_sv_dir/xvfb/log/run"; \
+>cat > "$$runit_sv_dir/openbox/run" <<EOF
+>#!/bin/bash
+>set -euo pipefail
+>while ! chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir xdpyinfo >/dev/null 2>&1; do
+>  sleep 1
+>done
+>exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir openbox-session
+>EOF
+>chmod 0755 "$$runit_sv_dir/openbox/run"; \
+>cat > "$$runit_sv_dir/openbox/log/run" <<EOF
+>#!/bin/bash
+>set -euo pipefail
+>exec svlogd -tt "$$runit_log_dir/openbox"
+>EOF
+>chmod 0755 "$$runit_sv_dir/openbox/log/run"; \
+>cat > "$$runit_sv_dir/x11vnc/run" <<EOF
+>#!/bin/bash
+>set -euo pipefail
+>while ! chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir xdpyinfo >/dev/null 2>&1; do
+>  sleep 1
+>done
+>exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir x11vnc -display $(GUI_DISPLAY) -forever -shared -rfbport $(GUI_VNC_PORT) -nopw -localhost
+>EOF
+>chmod 0755 "$$runit_sv_dir/x11vnc/run"; \
+>cat > "$$runit_sv_dir/x11vnc/log/run" <<EOF
+>#!/bin/bash
+>set -euo pipefail
+>exec svlogd -tt "$$runit_log_dir/x11vnc"
+>EOF
+>chmod 0755 "$$runit_sv_dir/x11vnc/log/run"; \
+>cat > "$$runit_sv_dir/novnc/run" <<EOF
+>#!/bin/bash
+>set -euo pipefail
+>while ! bash -lc 'exec 3<>/dev/tcp/127.0.0.1/$(GUI_VNC_PORT)' >/dev/null 2>&1; do
+>  sleep 1
+>done
+>exec chpst -u $$remote_user:$$remote_user env HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir websockify --web=/usr/share/novnc/ $(GUI_NOVNC_PORT) 127.0.0.1:$(GUI_VNC_PORT)
+>EOF
+>chmod 0755 "$$runit_sv_dir/novnc/run"; \
+>cat > "$$runit_sv_dir/novnc/log/run" <<EOF
+>#!/bin/bash
+>set -euo pipefail
+>exec svlogd -tt "$$runit_log_dir/novnc"
+>EOF
+>chmod 0755 "$$runit_sv_dir/novnc/log/run"; \
+>for service in xvfb openbox x11vnc novnc; do \
+>  svc_link="$$runit_service_dir/$$service"; \
+>  if [[ -L "$$svc_link" ]]; then \
+>    rm -f "$$svc_link"; \
+>  elif [[ -e "$$svc_link" ]]; then \
+>    echo "ERROR: $$svc_link exists and is not a symlink"; \
+>    exit 1; \
+>  fi; \
+>  ln -s "$$runit_sv_dir/$$service" "$$svc_link"; \
+>done; \
+>for service in xvfb openbox x11vnc novnc; do \
+>  supervise_ok="$$runit_service_dir/$$service/supervise/ok"; \
+>  for _ in {1..20}; do \
+>    if [[ -e "$$supervise_ok" ]]; then \
+>      break; \
+>    fi; \
+>    sleep 1; \
+>  done; \
+>  if [[ ! -e "$$supervise_ok" ]]; then \
+>    echo "ERROR: runit did not start supervising $$service"; \
+>    exit 1; \
+>  fi; \
+>done; \
+>for service in xvfb openbox x11vnc novnc; do \
+>  svc_link="$$runit_service_dir/$$service"; \
+>  if sv status "$$svc_link" >/dev/null 2>&1; then \
+>    if ! sv restart "$$svc_link"; then \
+>      rc="$$?"; \
+>      echo "ERROR: failed to restart $$service (rc=$$rc)"; \
+>      exit "$$rc"; \
+>    fi; \
+>  else \
+>    if ! sv up "$$svc_link"; then \
+>      rc="$$?"; \
+>      echo "ERROR: failed to start $$service (rc=$$rc)"; \
+>      exit "$$rc"; \
+>    fi; \
+>  fi; \
+>  sv status "$$svc_link"; \
+>done
+
+# Intent: Replace the legacy popup reminder with a deterministic Desktop note so
+# GUI users still get clipboard guidance without notifier/autostart complexity.
+# Source: DI-004-20260430-182956 (TODO/004)
+postCreateGUIDesktopNote:
+>@remote_user="$(DECOMK_REMOTE_USER)"; \
+>if [[ -z "$$remote_user" ]]; then \
+>  echo "ERROR: DECOMK_REMOTE_USER must be set by the container/stage-0 environment"; \
+>  exit 1; \
+>fi; \
+>user_home="$$(getent passwd "$$remote_user" | cut -d: -f6)"; \
+>if [[ -z "$$user_home" ]]; then \
+>  echo "ERROR: unable to resolve home directory for $$remote_user"; \
+>  exit 1; \
+>fi; \
+>desktop_dir="$$user_home/Desktop"; \
+>note_path="$$desktop_dir/clipboard-help.md"; \
+>install -d -o "$$remote_user" -g "$$remote_user" -m 0755 "$$desktop_dir"; \
+>$(AS_DEV) tee "$$note_path" >/dev/null <<'EOF'
+># noVNC Clipboard Help
+>
+>* Clipboard integration in browser-based desktops can be inconsistent.
+>* If paste fails, use the browser's paste controls or your terminal/context-menu paste.
+>* Plain-text paste is the safest option for commands and code snippets.
+>EOF
+>chmod 0644 "$$note_path"; \
+>echo "Wrote $$note_path"
 
 hello-test:
 >bash $(CONF_BIN_DIR)/hello-world.sh "hello-common" "$(HELLO_TEXT)" "$(DECOMK_STAGE0_PHASE)" "$(DEVCONTAINER_GUI)"
@@ -179,6 +375,42 @@ golang_go_e2_1_22_2build1: apt_index_noble_2026_04_23
 
 python3_3_12_3_0ubuntu2_1: apt_index_noble_2026_04_23
 >apt-get install -y -qq python3=3.12.3-0ubuntu2.1
+>@touch $@
+
+# -----------------------------------------------------------------------------
+# GUI desktop packages and runtime
+# -----------------------------------------------------------------------------
+
+openbox_3_6_1_12build5: apt_index_noble_2026_04_23
+>apt-get install -y -qq openbox=3.6.1-12build5
+>@touch $@
+
+x11vnc_0_9_16_10: apt_index_noble_2026_04_23
+>apt-get install -y -qq x11vnc=0.9.16-10
+>@touch $@
+
+xvfb_e2_21_1_12_1ubuntu1_5: apt_index_noble_2026_04_23
+>apt-get install -y -qq xvfb=2:21.1.12-1ubuntu1.5
+>@touch $@
+
+x11_apps_7_7_11build3: apt_index_noble_2026_04_23
+>apt-get install -y -qq x11-apps=7.7+11build3
+>@touch $@
+
+x11_utils_7_7_6build2: apt_index_noble_2026_04_23
+>apt-get install -y -qq x11-utils=7.7+6build2
+>@touch $@
+
+novnc_e1_1_3_0_2: apt_index_noble_2026_04_23
+>apt-get install -y -qq novnc=1:1.3.0-2
+>@touch $@
+
+websockify_0_10_0_dfsg1_5build2: apt_index_noble_2026_04_23
+>apt-get install -y -qq websockify=0.10.0+dfsg1-5build2
+>@touch $@
+
+epiphany_browser_46_5_0ubuntu1: apt_index_noble_2026_04_23
+>apt-get install -y -qq epiphany-browser=46.5-0ubuntu1
 >@touch $@
 
 # -----------------------------------------------------------------------------
