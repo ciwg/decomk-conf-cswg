@@ -1,25 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Intent: Provide one auditable operator path for decomk checkpoint releases so
-# the image build, immutable publish, and moving channel aliases stay in the
-# same guarded workflow. Source: DI-006-20260510-134857
+# Intent: Provide one auditable operator path for decomk checkpoint releases
+# while keeping the operator-supplied immutable tag exact. The script publishes
+# `${IMAGE}:${IMMUTABLE_TAG}` as typed and does not synthesize candidate,
+# timestamped immutable, or block-alias release tags.
+# Source: DI-006-20260510-141252
 
 usage() {
   cat <<'USAGE'
 Build, tag, and publish decomk checkpoint images.
 
 Usage:
-  tools/release-image.sh --block BLOCK --channel CHANNEL [--channel CHANNEL...]
-  tools/release-image.sh --source IMAGE:TAG --block BLOCK --channel CHANNEL [--channel CHANNEL...]
+  tools/release-image.sh --immutable-tag TAG --channel CHANNEL [--channel CHANNEL...]
+  tools/release-image.sh --source IMAGE:TAG --immutable-tag TAG --channel CHANNEL [--channel CHANNEL...]
 
 Options:
   --image IMAGE              Image repository, e.g. ghcr.io/ciwg/decomk-conf-cswg.
                              Default: infer from --source, else from .decomk/channels.json.
-  --block BLOCK              Required moving block alias, e.g. block10.
+  --immutable-tag TAG        Required immutable release tag, e.g. block00 or block00-rc3.
   --channel CHANNEL          Required moving channel alias; repeatable.
   --source IMAGE:TAG         Promote this existing source instead of building.
-  --stamp STAMP              Immutable release stamp. Default: UTC YYYYMMDD-HHMMSS.
+  --stamp STAMP              Artifact/local-source stamp. Default: UTC YYYYMMDD-HHMMSS.
   --workspace-folder PATH    Workspace folder for checkpoint build. Default: .
   --config PATH              Devcontainer config path. Default: .devcontainer/devcontainer.json.
   --out-dir DIR              Artifact directory. Default: /tmp/decomk-conf-cswg-release-image-<STAMP>.
@@ -32,8 +34,8 @@ Options:
   -h, --help                 Show help.
 
 Examples:
-  tools/release-image.sh --block block10 --channel main --channel testing
-  tools/release-image.sh --source ghcr.io/ciwg/decomk-conf-cswg:block10-20260510-193232 --block block10 --channel stable
+  tools/release-image.sh --immutable-tag block00-rc3 --channel main --channel testing
+  tools/release-image.sh --source ghcr.io/ciwg/decomk-conf-cswg:block00-rc3 --immutable-tag block00-rc3 --channel stable
 USAGE
 }
 
@@ -141,13 +143,13 @@ parse_args() {
         IMAGE="${1#--image=}"
         shift
         ;;
-      --block)
-        [[ $# -ge 2 ]] || die "--block requires a value"
-        BLOCK="$2"
+      --immutable-tag)
+        [[ $# -ge 2 ]] || die "--immutable-tag requires a value"
+        IMMUTABLE_TAG="$2"
         shift 2
         ;;
-      --block=*)
-        BLOCK="${1#--block=}"
+      --immutable-tag=*)
+        IMMUTABLE_TAG="${1#--immutable-tag=}"
         shift
         ;;
       --channel)
@@ -315,7 +317,7 @@ preflight() {
 
 main() {
   IMAGE=""
-  BLOCK=""
+  IMMUTABLE_TAG=""
   SOURCE=""
   STAMP=""
   WORKSPACE_FOLDER="."
@@ -340,11 +342,11 @@ main() {
 
   mkdir -p "$OUT_DIR"
 
-  if [[ -z "$BLOCK" ]]; then
-    die "--block is required"
+  if [[ -z "$IMMUTABLE_TAG" ]]; then
+    die "--immutable-tag is required"
   fi
-  if [[ "$BLOCK" == *:* || "$BLOCK" == */* ]]; then
-    die "--block must be an image tag name, not a reference: $BLOCK"
+  if [[ "$IMMUTABLE_TAG" == *:* || "$IMMUTABLE_TAG" == */* ]]; then
+    die "--immutable-tag must be an image tag name, not a reference: $IMMUTABLE_TAG"
   fi
   if [[ "${#CHANNELS[@]}" -eq 0 ]]; then
     die "at least one --channel value is required"
@@ -359,10 +361,9 @@ main() {
     die "--image resolved to an empty value"
   fi
 
-  local candidate_tag="${IMAGE}:${BLOCK}-candidate-${STAMP}"
-  local immutable_tag="${IMAGE}:${BLOCK}-${STAMP}"
-  local block_alias="${IMAGE}:${BLOCK}"
-  local promote_source="$immutable_tag"
+  local local_source_ref="decomk-release:${IMMUTABLE_TAG}-${STAMP}"
+  local release_ref="${IMAGE}:${IMMUTABLE_TAG}"
+  local promote_source="$release_ref"
 
   if [[ -n "$SOURCE" ]]; then
     promote_source="$SOURCE"
@@ -377,12 +378,11 @@ main() {
   {
     echo "timestamp_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     echo "image=$IMAGE"
-    echo "block=$BLOCK"
+    echo "release_tag=$IMMUTABLE_TAG"
     echo "stamp=$STAMP"
     echo "source=${SOURCE:-}"
-    echo "candidate_tag=$candidate_tag"
-    echo "immutable_tag=$immutable_tag"
-    echo "block_alias=$block_alias"
+    echo "local_source_ref=$local_source_ref"
+    echo "release_ref=$release_ref"
     echo "channels=${CHANNELS[*]}"
     echo "out_dir=$OUT_DIR"
     echo "dry_run=$DRY_RUN"
@@ -390,7 +390,7 @@ main() {
 
   echo "Release image plan"
   echo "- image:        $IMAGE"
-  echo "- block:        $BLOCK"
+  echo "- immutable:    $IMMUTABLE_TAG"
   echo "- channels:     ${CHANNELS[*]}"
   echo "- artifacts:    $OUT_DIR"
   if [[ -n "$SOURCE" ]]; then
@@ -398,13 +398,12 @@ main() {
     echo "- source:       $SOURCE"
   else
     echo "- mode:         build"
-    echo "- candidate:    $candidate_tag"
-    echo "- immutable:    $immutable_tag"
+    echo "- local source: $local_source_ref"
   fi
-  echo "- moving block: $block_alias"
+  echo "- release ref:  $release_ref"
 
   if [[ -z "$SOURCE" ]]; then
-    local build_cmd=("$DECOMK_BIN" checkpoint build -workspace-folder "$WORKSPACE_FOLDER" -config "$CONFIG_PATH" -tag "$candidate_tag")
+    local build_cmd=("$DECOMK_BIN" checkpoint build -workspace-folder "$WORKSPACE_FOLDER" -config "$CONFIG_PATH" -tag "$local_source_ref")
     if [[ "$KEEP_CONTAINER" == "true" ]]; then
       build_cmd+=(-keep-container)
     fi
@@ -413,15 +412,19 @@ main() {
     fi
 
     run_logged checkpoint-build "$OUT_DIR/checkpoint-build.json" "${build_cmd[@]}"
-    run_logged checkpoint-push-immutable "$OUT_DIR/checkpoint-push-immutable.json" "$DECOMK_BIN" checkpoint push "$candidate_tag" "$immutable_tag"
+    run_logged checkpoint-push-release "$OUT_DIR/checkpoint-push-release.json" "$DECOMK_BIN" checkpoint push "$local_source_ref" "$release_ref"
+    promote_source="$release_ref"
+  elif [[ "$SOURCE" != "$release_ref" ]]; then
+    run_logged checkpoint-push-release "$OUT_DIR/checkpoint-push-release.json" "$DECOMK_BIN" checkpoint push "$SOURCE" "$release_ref"
+    promote_source="$release_ref"
   fi
 
-  run_logged checkpoint-tag-aliases "$OUT_DIR/checkpoint-tag-aliases.json" "$DECOMK_BIN" checkpoint tag -m "$promote_source" "$block_alias" "${channel_tags[@]}"
+  run_logged checkpoint-tag-channels "$OUT_DIR/checkpoint-tag-channels.json" "$DECOMK_BIN" checkpoint tag -m "$promote_source" "${channel_tags[@]}"
 
   echo
   echo "Release image complete"
   echo "- source promoted: $promote_source"
-  echo "- aliases moved:   $block_alias ${channel_tags[*]}"
+  echo "- channels moved:  ${channel_tags[*]}"
   echo "- artifacts:       $OUT_DIR"
 }
 
