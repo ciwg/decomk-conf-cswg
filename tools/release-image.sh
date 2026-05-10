@@ -5,7 +5,7 @@ set -euo pipefail
 # while keeping the operator-supplied immutable tag exact. The script publishes
 # `${IMAGE}:${IMMUTABLE_TAG}` as typed and does not synthesize candidate,
 # timestamped immutable, stamp-controlled, or block-alias release tags.
-# Source: DI-006-20260510-142425
+# Source: DI-006-20260510-144211
 
 usage() {
   cat <<'USAGE'
@@ -356,10 +356,10 @@ main() {
     promote_source="$SOURCE"
   fi
 
-  local channel_tags=()
+  local channel_refs=()
   local channel=""
   for channel in "${CHANNELS[@]}"; do
-    channel_tags+=("${IMAGE}:${channel}")
+    channel_refs+=("${IMAGE}:${channel}")
   done
 
   {
@@ -419,17 +419,46 @@ main() {
     run_logged checkpoint-build "$OUT_DIR/checkpoint-build.json" "${build_cmd[@]}"
     run_logged docker-push-release "$OUT_DIR/docker-push-release.out" docker push "$release_ref"
     promote_source="$release_ref"
-  elif [[ "$SOURCE" != "$release_ref" ]]; then
-    run_logged checkpoint-push-release "$OUT_DIR/checkpoint-push-release.json" "$DECOMK_BIN" checkpoint push "$SOURCE" "$release_ref"
+  else
+    run_logged docker-pull-source "$OUT_DIR/docker-pull-source.out" docker pull "$SOURCE"
+    if [[ "$SOURCE" != "$release_ref" ]]; then
+      local release_check_out="$OUT_DIR/check-release-ref.out"
+      local release_check_err="$OUT_DIR/check-release-ref.err"
+
+      if [[ "$DRY_RUN" == "true" ]]; then
+        run_logged check-release-ref "$OUT_DIR/check-release-ref.json" docker manifest inspect "$release_ref"
+      elif docker manifest inspect "$release_ref" >"$release_check_out" 2>"$release_check_err"; then
+        die "release tag already exists: $release_ref"
+      else
+        local release_check_rc="$?"
+        if grep -Eiq 'manifest unknown|no such manifest|name unknown|not found' "$release_check_out" "$release_check_err"; then
+          :
+        else
+          echo "ERROR: unable to prove release tag is absent: $release_ref" >&2
+          echo "ERROR: docker manifest inspect rc=$release_check_rc" >&2
+          echo "ERROR: stdout: $release_check_out" >&2
+          echo "ERROR: stderr: $release_check_err" >&2
+          return "$release_check_rc"
+        fi
+      fi
+
+      run_logged docker-tag-release "$OUT_DIR/docker-tag-release.out" docker tag "$SOURCE" "$release_ref"
+      run_logged docker-push-release "$OUT_DIR/docker-push-release.out" docker push "$release_ref"
+    fi
     promote_source="$release_ref"
   fi
 
-  run_logged checkpoint-tag-channels "$OUT_DIR/checkpoint-tag-channels.json" "$DECOMK_BIN" checkpoint tag -m "$promote_source" "${channel_tags[@]}"
+  local channel_ref=""
+  for channel_ref in "${channel_refs[@]}"; do
+    local channel_name="${channel_ref##*:}"
+    run_logged "docker-tag-channel-${channel_name}" "$OUT_DIR/docker-tag-channel-${channel_name}.out" docker tag "$promote_source" "$channel_ref"
+    run_logged "docker-push-channel-${channel_name}" "$OUT_DIR/docker-push-channel-${channel_name}.out" docker push "$channel_ref"
+  done
 
   echo
   echo "Release image complete"
   echo "- source promoted: $promote_source"
-  echo "- channels moved:  ${channel_tags[*]}"
+  echo "- channels moved:  ${channel_refs[*]}"
   echo "- artifacts:       $OUT_DIR"
 }
 
