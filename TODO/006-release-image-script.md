@@ -2,9 +2,18 @@
 
 ## Decision Intent Log
 
+ID: DI-006-20260510-142425
+Date: 2026-05-10 14:24:25 -0700
+Status: active
+Decision: Pass the canonical release reference `${IMAGE}:${IMMUTABLE_TAG}` directly to `decomk checkpoint build -tag` in build mode, then push that exact tag to the registry.
+Intent: Make `--immutable-tag` the build artifact's canonical image tag from the moment decomk commits the checkpoint, so operator-provided tags such as `block00` and `block00-rc3` are not temporary aliases or post-build destinations.
+Constraints: Check whether the remote release tag already exists before the build path pushes it; do not generate or use a temporary local build-source tag; keep `RUN_ID` only for artifact directory uniqueness; keep promote mode able to publish a distinct `--source` to the requested immutable tag with `decomk checkpoint push`.
+Affects: `tools/release-image.sh`, `TODO/006-release-image-script.md`
+Supersedes: DI-006-20260510-142027
+
 ID: DI-006-20260510-142027
 Date: 2026-05-10 14:20:27 -0700
-Status: active
+Status: superseded
 Decision: Remove the public `--stamp` release-image argument and generate an internal `RUN_ID` for artifact directory names and temporary local build-source tags.
 Intent: Keep the public release interface focused on operator-owned image tags; callers who need a deterministic artifact path can use `--out-dir` instead of controlling an unrelated timestamp flag.
 Constraints: Do not let the generated run identifier affect any published registry tag; include the shell process ID in `RUN_ID` so same-second invocations do not collide; keep `/tmp/decomk-conf-cswg-release-image-<RUN_ID>/` as the default artifact pattern; keep the temporary `decomk-release:<immutable>-<RUN_ID>` tag local to the build/push handoff.
@@ -33,10 +42,11 @@ Affects: `tools/release-image.sh`, `TODO/006-release-image-script.md`, `TODO/TOD
 Provide an operator script for periodic image releases:
 
 - build a checkpoint image from the current rendered devcontainer,
-- publish exactly one operator-supplied immutable tag such as `block00` or `block00-rc3`,
+- pass exactly one operator-supplied immutable tag such as `block00` or `block00-rc3` to `decomk checkpoint build -tag`,
+- push that exact immutable tag to the registry,
 - move requested channel aliases such as `main`, `testing`, and `stable`,
 - support promote-only retagging from an already-tested immutable source,
-- generate an internal run identifier only for local artifacts and temporary local tags.
+- generate an internal run identifier only for local artifacts.
 
 ## Subtasks
 

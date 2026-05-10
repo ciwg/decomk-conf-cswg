@@ -5,7 +5,7 @@ set -euo pipefail
 # while keeping the operator-supplied immutable tag exact. The script publishes
 # `${IMAGE}:${IMMUTABLE_TAG}` as typed and does not synthesize candidate,
 # timestamped immutable, stamp-controlled, or block-alias release tags.
-# Source: DI-006-20260510-142027
+# Source: DI-006-20260510-142425
 
 usage() {
   cat <<'USAGE'
@@ -349,7 +349,6 @@ main() {
     die "--image resolved to an empty value"
   fi
 
-  local local_source_ref="decomk-release:${IMMUTABLE_TAG}-${RUN_ID}"
   local release_ref="${IMAGE}:${IMMUTABLE_TAG}"
   local promote_source="$release_ref"
 
@@ -369,7 +368,6 @@ main() {
     echo "release_tag=$IMMUTABLE_TAG"
     echo "run_id=$RUN_ID"
     echo "source=${SOURCE:-}"
-    echo "local_source_ref=$local_source_ref"
     echo "release_ref=$release_ref"
     echo "channels=${CHANNELS[*]}"
     echo "out_dir=$OUT_DIR"
@@ -386,12 +384,31 @@ main() {
     echo "- source:       $SOURCE"
   else
     echo "- mode:         build"
-    echo "- local source: $local_source_ref"
   fi
   echo "- release ref:  $release_ref"
 
   if [[ -z "$SOURCE" ]]; then
-    local build_cmd=("$DECOMK_BIN" checkpoint build -workspace-folder "$WORKSPACE_FOLDER" -config "$CONFIG_PATH" -tag "$local_source_ref")
+    local release_check_out="$OUT_DIR/check-release-ref.out"
+    local release_check_err="$OUT_DIR/check-release-ref.err"
+
+    if [[ "$DRY_RUN" == "true" ]]; then
+      run_logged check-release-ref "$OUT_DIR/check-release-ref.json" docker manifest inspect "$release_ref"
+    elif docker manifest inspect "$release_ref" >"$release_check_out" 2>"$release_check_err"; then
+      die "release tag already exists: $release_ref"
+    else
+      local release_check_rc="$?"
+      if grep -Eiq 'manifest unknown|no such manifest|name unknown|not found' "$release_check_out" "$release_check_err"; then
+        :
+      else
+        echo "ERROR: unable to prove release tag is absent: $release_ref" >&2
+        echo "ERROR: docker manifest inspect rc=$release_check_rc" >&2
+        echo "ERROR: stdout: $release_check_out" >&2
+        echo "ERROR: stderr: $release_check_err" >&2
+        return "$release_check_rc"
+      fi
+    fi
+
+    local build_cmd=("$DECOMK_BIN" checkpoint build -workspace-folder "$WORKSPACE_FOLDER" -config "$CONFIG_PATH" -tag "$release_ref")
     if [[ "$KEEP_CONTAINER" == "true" ]]; then
       build_cmd+=(-keep-container)
     fi
@@ -400,7 +417,7 @@ main() {
     fi
 
     run_logged checkpoint-build "$OUT_DIR/checkpoint-build.json" "${build_cmd[@]}"
-    run_logged checkpoint-push-release "$OUT_DIR/checkpoint-push-release.json" "$DECOMK_BIN" checkpoint push "$local_source_ref" "$release_ref"
+    run_logged docker-push-release "$OUT_DIR/docker-push-release.out" docker push "$release_ref"
     promote_source="$release_ref"
   elif [[ "$SOURCE" != "$release_ref" ]]; then
     run_logged checkpoint-push-release "$OUT_DIR/checkpoint-push-release.json" "$DECOMK_BIN" checkpoint push "$SOURCE" "$release_ref"
