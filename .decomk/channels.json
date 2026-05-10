@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "devcontainer": {
+    "path": ".devcontainer/devcontainer.json",
+    "name": "decomk-conf-cswg",
+    "overrideCommand": false,
+    "comments": {
+      "overrideCommand": [
+        "Intent: Honor the image entrypoint so published producer images can carry",
+        "the long-lived runit supervisor contract into consumer repos.",
+        "Source: DI-004-20260430-182956 (TODO/004)"
+      ]
+    },
+    "containerEnv": {
+      "DECOMK_FAIL_NOBOOT": "false"
+    },
+    "updateRemoteUserUID": false,
+    "updateContentCommand": "bash .devcontainer/decomk-stage0.sh updateContent",
+    "postCreateCommand": "bash .devcontainer/decomk-stage0.sh postCreate"
+  },
+  "channels": {
+    "main": {
+      "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+      },
+      "containerEnv": {
+        "DECOMK_TOOL_URI": "go:github.com/stevegt/decomk/cmd/decomk@main",
+        "DECOMK_CONF_URI": "git:https://github.com/ciwg/decomk-conf-cswg.git?ref=main"
+      }
+    },
+    "testing": {
+      "image": "ghcr.io/ciwg/decomk-conf-cswg:testing",
+      "containerEnv": {
+        "DECOMK_TOOL_URI": "go:github.com/stevegt/decomk/cmd/decomk@testing",
+        "DECOMK_CONF_URI": "git:https://github.com/ciwg/decomk-conf-cswg.git?ref=testing"
+      }
+    },
+    "stable": {
+      "image": "ghcr.io/ciwg/decomk-conf-cswg:stable",
+      "containerEnv": {
+        "DECOMK_TOOL_URI": "go:github.com/stevegt/decomk/cmd/decomk@stable",
+        "DECOMK_CONF_URI": "git:https://github.com/ciwg/decomk-conf-cswg.git?ref=stable"
+      }
+    }
+  }
+}

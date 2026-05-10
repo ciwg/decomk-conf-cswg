@@ -156,6 +156,12 @@
   uncommitted changes, and plan how to ask me for approval of each
   delta".
 
+## Cross-Repo Decomk Boundary
+- Changes to `/home/stevegt/lab/decomk` MUST be made by the Codex session running in the decomk repo.
+- This repo's Codex session MUST NOT edit decomk repo files directly, except for TODO handoff files that request work from the decomk Codex session.
+- Requests for decomk changes MUST be handed off by writing TODO files in the decomk repo, then asking the decomk Codex session to implement them.
+- Intent: Keep decomk implementation ownership inside the decomk workspace while allowing this repo to document precise handoff requests. Source: DI-005-20260507-153000
+
 ## TODO Tracking 
 - Maintain a ./TODO/ directory for tracking tasks and plans.
 - Maintain a ./TODO/TODO.md file that lists small tasks and the other TODO files.
