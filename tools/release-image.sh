@@ -4,8 +4,8 @@ set -euo pipefail
 # Intent: Provide one auditable operator path for decomk checkpoint releases
 # while keeping the operator-supplied immutable tag exact. The script publishes
 # `${IMAGE}:${IMMUTABLE_TAG}` as typed and does not synthesize candidate,
-# timestamped immutable, or block-alias release tags.
-# Source: DI-006-20260510-141252
+# timestamped immutable, stamp-controlled, or block-alias release tags.
+# Source: DI-006-20260510-142027
 
 usage() {
   cat <<'USAGE'
@@ -21,10 +21,9 @@ Options:
   --immutable-tag TAG        Required immutable release tag, e.g. block00 or block00-rc3.
   --channel CHANNEL          Required moving channel alias; repeatable.
   --source IMAGE:TAG         Promote this existing source instead of building.
-  --stamp STAMP              Artifact/local-source stamp. Default: UTC YYYYMMDD-HHMMSS.
   --workspace-folder PATH    Workspace folder for checkpoint build. Default: .
   --config PATH              Devcontainer config path. Default: .devcontainer/devcontainer.json.
-  --out-dir DIR              Artifact directory. Default: /tmp/decomk-conf-cswg-release-image-<STAMP>.
+  --out-dir DIR              Artifact directory. Default: /tmp/decomk-conf-cswg-release-image-<RUN_ID>.
   --decomk PATH              decomk command or path. Default: decomk.
   --keep-container           Keep the checkpoint build container for diagnostics.
   -q, --quiet                Pass quiet mode to checkpoint build.
@@ -170,15 +169,6 @@ parse_args() {
         SOURCE="${1#--source=}"
         shift
         ;;
-      --stamp)
-        [[ $# -ge 2 ]] || die "--stamp requires a value"
-        STAMP="$2"
-        shift 2
-        ;;
-      --stamp=*)
-        STAMP="${1#--stamp=}"
-        shift
-        ;;
       --workspace-folder)
         [[ $# -ge 2 ]] || die "--workspace-folder requires a value"
         WORKSPACE_FOLDER="$2"
@@ -319,7 +309,7 @@ main() {
   IMAGE=""
   IMMUTABLE_TAG=""
   SOURCE=""
-  STAMP=""
+  RUN_ID=""
   WORKSPACE_FOLDER="."
   CONFIG_PATH=".devcontainer/devcontainer.json"
   OUT_DIR=""
@@ -333,11 +323,9 @@ main() {
 
   parse_args "$@"
 
-  if [[ -z "$STAMP" ]]; then
-    STAMP="$(date -u +%Y%m%d-%H%M%S)"
-  fi
+  RUN_ID="$(date -u +%Y%m%d-%H%M%S)-$$"
   if [[ -z "$OUT_DIR" ]]; then
-    OUT_DIR="/tmp/decomk-conf-cswg-release-image-${STAMP}"
+    OUT_DIR="/tmp/decomk-conf-cswg-release-image-${RUN_ID}"
   fi
 
   mkdir -p "$OUT_DIR"
@@ -361,7 +349,7 @@ main() {
     die "--image resolved to an empty value"
   fi
 
-  local local_source_ref="decomk-release:${IMMUTABLE_TAG}-${STAMP}"
+  local local_source_ref="decomk-release:${IMMUTABLE_TAG}-${RUN_ID}"
   local release_ref="${IMAGE}:${IMMUTABLE_TAG}"
   local promote_source="$release_ref"
 
@@ -379,7 +367,7 @@ main() {
     echo "timestamp_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     echo "image=$IMAGE"
     echo "release_tag=$IMMUTABLE_TAG"
-    echo "stamp=$STAMP"
+    echo "run_id=$RUN_ID"
     echo "source=${SOURCE:-}"
     echo "local_source_ref=$local_source_ref"
     echo "release_ref=$release_ref"

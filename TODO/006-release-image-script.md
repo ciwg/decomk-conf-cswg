@@ -2,9 +2,18 @@
 
 ## Decision Intent Log
 
+ID: DI-006-20260510-142027
+Date: 2026-05-10 14:20:27 -0700
+Status: active
+Decision: Remove the public `--stamp` release-image argument and generate an internal `RUN_ID` for artifact directory names and temporary local build-source tags.
+Intent: Keep the public release interface focused on operator-owned image tags; callers who need a deterministic artifact path can use `--out-dir` instead of controlling an unrelated timestamp flag.
+Constraints: Do not let the generated run identifier affect any published registry tag; include the shell process ID in `RUN_ID` so same-second invocations do not collide; keep `/tmp/decomk-conf-cswg-release-image-<RUN_ID>/` as the default artifact pattern; keep the temporary `decomk-release:<immutable>-<RUN_ID>` tag local to the build/push handoff.
+Affects: `tools/release-image.sh`, `TODO/006-release-image-script.md`
+Supersedes: DI-006-20260510-141252
+
 ID: DI-006-20260510-141252
 Date: 2026-05-10 14:12:52 -0700
-Status: active
+Status: superseded
 Decision: Replace the generated `--block`/candidate/immutable tag model with an explicit `--immutable-tag` operator input; the script publishes exactly `${IMAGE}:${IMMUTABLE_TAG}` and moves only the requested channel tags to that release reference.
 Intent: Keep release tag naming under operator control so tags such as `block00` and `block00-rc3` mean exactly what the operator typed instead of being expanded into additional candidate, timestamped immutable, or block-alias tags by the script.
 Constraints: Keep checkpoint build/push/tag as the underlying mechanism; use an internal local build source only when checkpoint build needs a temporary local tag; do not expose or persist the old generated candidate/immutable/block-alias metadata model; preserve strict preflight and `/tmp/decomk-conf-cswg-release-image-<UTCSTAMP>/` artifacts.
@@ -26,7 +35,8 @@ Provide an operator script for periodic image releases:
 - build a checkpoint image from the current rendered devcontainer,
 - publish exactly one operator-supplied immutable tag such as `block00` or `block00-rc3`,
 - move requested channel aliases such as `main`, `testing`, and `stable`,
-- support promote-only retagging from an already-tested immutable source.
+- support promote-only retagging from an already-tested immutable source,
+- generate an internal run identifier only for local artifacts and temporary local tags.
 
 ## Subtasks
 
