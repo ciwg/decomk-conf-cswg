@@ -1,5 +1,6 @@
 # TODO Index
 
+- [ ] 007 - Add `apt-oci` APT package OCI cache (`TODO/007-apt-oci-cache.md`)
 - [ ] 005 - Add branch-channel renderer registry for devcontainer policy (`TODO/005-channel-branch-rendering.md`)
 - [ ] 004 - Define and implement mob-consensus GUI stack migration from mob-sandbox postCreate script (`TODO/004-mob-consensus-gui-stack.md`)
 - [ ] 003 - Implement GUI desktop support for mob-consensus (`TODO/003-mob-consensus-gui-desktop.md`)
