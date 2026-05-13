@@ -9,11 +9,19 @@
 
 FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
+COPY bin/apt-pin /usr/local/bin/apt-pin
+
+# Intent: Pin APT package resolution to a single Ubuntu archive snapshot during
+# producer-image bootstrap, then keep `apt-pin` in PATH for later decomk stages.
+# Source: DI-007-20260513-190436 (TODO/007)
+ENV APT_PIN_SNAPSHOT=20260430T000000Z
+
 # Package install names and version pinning vary across distro families. Keep
 # this list aligned with your chosen base image and mirror/retention policy,
 # and pin versions where your platform policy requires deterministic builds.
-RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+RUN chmod 0755 /usr/local/bin/apt-pin \
+ && apt-pin update -qq \
+ && DEBIAN_FRONTEND=noninteractive apt-pin install -y --no-install-recommends \
       bash=5.2.21-2ubuntu4 \
       ca-certificates=20240203 \
       git=1:2.43.0-1ubuntu7.3 \

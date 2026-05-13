@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Intent: Keep package installs pinned to an explicit Ubuntu archive snapshot
+# while preserving normal apt-get command semantics for Dockerfile and later
+# Makefile call sites. Source: DI-007-20260513-190436
+
+usage() {
+  cat <<'USAGE'
+Usage:
+  apt-pin <apt-get command> [apt-get args...]
+
+Required environment:
+  APT_PIN_SNAPSHOT=YYYYMMDDTHHMMSSZ
+
+Examples:
+  APT_PIN_SNAPSHOT=20260430T000000Z apt-pin update -qq
+  APT_PIN_SNAPSHOT=20260430T000000Z apt-pin install -y vim=2:9.1.0016-1ubuntu7.12
+USAGE
+}
+
+main() {
+  if [[ $# -eq 0 ]]; then
+    usage >&2
+    exit 64
+  fi
+
+  if [[ -z "${APT_PIN_SNAPSHOT:-}" ]]; then
+    echo "ERROR: APT_PIN_SNAPSHOT must be set to an Ubuntu snapshot ID like 20260430T000000Z" >&2
+    exit 64
+  fi
+
+  if [[ ! "$APT_PIN_SNAPSHOT" =~ ^[0-9]{8}T[0-9]{6}Z$ ]]; then
+    echo "ERROR: APT_PIN_SNAPSHOT has invalid format: $APT_PIN_SNAPSHOT" >&2
+    echo "Expected format: YYYYMMDDTHHMMSSZ" >&2
+    exit 64
+  fi
+
+  exec apt-get --snapshot "$APT_PIN_SNAPSHOT" "$@"
+}
+
+main "$@"
