@@ -52,7 +52,7 @@ Reproducibility:
 - A makes first-arrival time an implicit release decision.
 - B is auditable but manual.
 - C and D can be auditable with manifests that record source snapshot, package versions, dependency closure, actor, and timestamp.
-- E is auditable through the single `APT_PIN_SNAPSHOT` value and preserves a stable command interface for later manifests.
+- E is auditable through APT's single configured `APT::Snapshot` value and preserves a stable command interface for later manifests.
 
 Base image drift:
 - A, C, and D must compute dependency closure relative to a declared base image or include base identity in the cache key.
@@ -69,6 +69,6 @@ Base image drift:
 ## Implications for TODO 007
 
 - `apt-pin` supersedes `apt-oci` as the immediate implementation.
-- `APT_PIN_SNAPSHOT` becomes the required v1 configuration source.
+- APT's `APT::Snapshot` config becomes the required v1 configuration source.
 - OCI artifact layout, registry location, and cache-miss policy are deferred.
 - The Makefile migration should happen only after the producer Dockerfile path proves the wrapper works.

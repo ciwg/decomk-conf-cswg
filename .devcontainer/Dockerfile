@@ -11,15 +11,15 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 COPY bin/apt-pin /usr/local/bin/apt-pin
 
-# Intent: Pin APT package resolution to a single Ubuntu archive snapshot during
-# producer-image bootstrap, then keep `apt-pin` in PATH for later decomk stages.
-# Source: DI-007-20260513-190436 (TODO/007)
-ENV APT_PIN_SNAPSHOT=20260430T000000Z
-
 # Package install names and version pinning vary across distro families. Keep
 # this list aligned with your chosen base image and mirror/retention policy,
 # and pin versions where your platform policy requires deterministic builds.
+# Intent: Pin raw apt-get and apt-pin package resolution to one image-owned APT
+# snapshot during producer-image bootstrap, then let later Block* transitions
+# advance the configured snapshot deliberately.
+# Source: DI-007-20260513-195450 (TODO/007)
 RUN chmod 0755 /usr/local/bin/apt-pin \
+ && printf 'APT::Snapshot "%s";\n' "20260430T000000Z" > /etc/apt/apt.conf.d/50snapshot \
  && apt-pin update -qq \
  && DEBIAN_FRONTEND=noninteractive apt-pin install -y --no-install-recommends \
       bash=5.2.21-2ubuntu4 \

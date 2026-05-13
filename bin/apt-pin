@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Intent: Keep package installs pinned to an explicit Ubuntu archive snapshot
-# while preserving normal apt-get command semantics for Dockerfile and later
-# Makefile call sites. Source: DI-007-20260513-190436
+# Intent: Require the system APT configuration to name the current Ubuntu
+# archive snapshot, then preserve normal apt-get command semantics for
+# Dockerfile and later Makefile call sites. Source: DI-007-20260513-195450
 
 usage() {
   cat <<'USAGE'
@@ -11,32 +11,60 @@ Usage:
   apt-pin <apt-get command> [apt-get args...]
 
 Required environment:
-  APT_PIN_SNAPSHOT=YYYYMMDDTHHMMSSZ
+  none
 
 Examples:
-  APT_PIN_SNAPSHOT=20260430T000000Z apt-pin update -qq
-  APT_PIN_SNAPSHOT=20260430T000000Z apt-pin install -y vim=2:9.1.0016-1ubuntu7.12
+  printf 'APT::Snapshot "%s";\n' "20260430T000000Z" > /etc/apt/apt.conf.d/50snapshot
+  apt-pin update -qq
+  apt-pin install -y vim=2:9.1.0016-1ubuntu7.12
 USAGE
 }
 
+read_apt_snapshot() {
+  local config_output snapshot
+
+  if ! config_output="$(apt-config shell Snapshot APT::Snapshot)"; then
+    echo "ERROR: unable to read APT::Snapshot from apt config" >&2
+    exit 64
+  fi
+
+  if [[ -z "$config_output" ]]; then
+    echo "ERROR: APT::Snapshot must be set in apt config, for example /etc/apt/apt.conf.d/50snapshot" >&2
+    exit 64
+  fi
+
+  if [[ "$config_output" != Snapshot=\'*\' ]]; then
+    echo "ERROR: unexpected apt-config output for APT::Snapshot: $config_output" >&2
+    exit 64
+  fi
+
+  snapshot="${config_output#Snapshot=\'}"
+  snapshot="${snapshot%\'}"
+  printf '%s\n' "$snapshot"
+}
+
+validate_snapshot() {
+  local snapshot="$1"
+
+  if [[ ! "$snapshot" =~ ^[0-9]{8}T[0-9]{6}Z$ ]]; then
+    echo "ERROR: APT::Snapshot has invalid format: $snapshot" >&2
+    echo "Expected format: YYYYMMDDTHHMMSSZ" >&2
+    exit 64
+  fi
+}
+
 main() {
+  local snapshot
+
   if [[ $# -eq 0 ]]; then
     usage >&2
     exit 64
   fi
 
-  if [[ -z "${APT_PIN_SNAPSHOT:-}" ]]; then
-    echo "ERROR: APT_PIN_SNAPSHOT must be set to an Ubuntu snapshot ID like 20260430T000000Z" >&2
-    exit 64
-  fi
+  snapshot="$(read_apt_snapshot)"
+  validate_snapshot "$snapshot"
 
-  if [[ ! "$APT_PIN_SNAPSHOT" =~ ^[0-9]{8}T[0-9]{6}Z$ ]]; then
-    echo "ERROR: APT_PIN_SNAPSHOT has invalid format: $APT_PIN_SNAPSHOT" >&2
-    echo "Expected format: YYYYMMDDTHHMMSSZ" >&2
-    exit 64
-  fi
-
-  exec apt-get --snapshot "$APT_PIN_SNAPSHOT" "$@"
+  exec apt-get "$@"
 }
 
 main "$@"

@@ -17,7 +17,7 @@ Affects: `Makefile` package install blocks, new `tools/apt-oci` helper, Codespac
 
 ID: DI-007-20260513-190436
 Date: 2026-05-13 19:04:36 UTC
-Status: active
+Status: superseded
 Decision: Replace the immediate `apt-oci` implementation with `apt-pin`, a `PATH`-installed `apt-get` passthrough that requires `APT_PIN_SNAPSHOT` and injects Ubuntu's `--snapshot` option for every APT command it runs.
 Intent: Stabilize Codespaces package installs quickly with Canonical's snapshot service while preserving a single wrapper interface that can later grow an OCI/blob-cache backend without changing Makefile call sites again.
 Constraints:
@@ -28,6 +28,20 @@ Constraints:
 - Defer OCI bundle layout, registry location, and cache-miss population policy to a later backend decision behind the `apt-pin` interface.
 Affects: `bin/apt-pin`, `.devcontainer/Dockerfile`, `TODO/007-apt-oci-cache.md`, `TODO/TODO.md`, `docs/thought-experiments/TE-20260513-180434-apt-pin-cache-authority.md`
 Supersedes: DI-007-20260510-163752
+
+ID: DI-007-20260513-195450
+Date: 2026-05-13 19:54:50 UTC
+Status: active
+Decision: Make APT's `APT::Snapshot` configuration the v1 snapshot authority; `apt-pin` validates that configuration and delegates to plain `apt-get` without passing `--snapshot` itself.
+Intent: Pin raw `apt-get` and `apt-pin` through one system-level APT epoch so Codespaces package setup behaves like an image-local package source while later Block* milestones can advance the configured snapshot deliberately.
+Constraints:
+- Write `/etc/apt/apt.conf.d/50snapshot` before any `apt-pin update` or package install runs.
+- Do not accept `APT_PIN_SNAPSHOT` as an alternate source of truth in v1.
+- Keep `bin/apt-pin` small enough to use before Go, ORAS, or decomk are installed.
+- Keep the current Makefile package target wiring unchanged until a later Makefile migration.
+- Assume Block* progression is monotonic; old package prereqs are not expected to be manually rerun after later snapshot transitions.
+Affects: `bin/apt-pin`, `.devcontainer/Dockerfile`, `TODO/007-apt-oci-cache.md`, `docs/thought-experiments/TE-20260513-180434-apt-pin-cache-authority.md`
+Supersedes: DI-007-20260513-190436
 
 ## Background / Problem
 
@@ -49,9 +63,9 @@ Be able to write something as simple as:
 
 …in a Makefile stanza or Dockerfile, and have it:
 
-1. Require `APT_PIN_SNAPSHOT=YYYYMMDDTHHMMSSZ`.
-2. Reject unset or malformed snapshot values before touching APT.
-3. Pass the user's command through to `apt-get` with `--snapshot "$APT_PIN_SNAPSHOT"`.
+1. Require `APT::Snapshot "YYYYMMDDTHHMMSSZ";` in APT config.
+2. Reject unset or malformed snapshot values before touching package state.
+3. Pass the user's command through to plain `apt-get`.
 4. Keep the wrapper available in `PATH` at Codespaces runtime, like `decomk`.
 5. Keep the public wrapper name stable when OCI/blob caching is added later.
 
@@ -63,17 +77,19 @@ Be able to write something as simple as:
 
 - It is a shell script, not Go, because `.devcontainer/Dockerfile` needs it before installing Go.
 - It lives in the conf repo as `bin/apt-pin` and is copied to `/usr/local/bin/apt-pin` early in the producer image build.
-- It executes `apt-get --snapshot "$APT_PIN_SNAPSHOT" "$@"`.
+- It reads `APT::Snapshot` with `apt-config shell Snapshot APT::Snapshot`.
+- It executes `apt-get "$@"` after validating the configured snapshot.
 - It performs only wrapper-level validation; package solving, signature verification, and install behavior stay owned by APT.
 
 ### Snapshot ownership
 
-`APT_PIN_SNAPSHOT` is image-owned for now:
+APT config is the snapshot source of truth:
 
-- Dockerfile sets it before the first package install.
+- Dockerfile writes `/etc/apt/apt.conf.d/50snapshot` before the first package install.
 - The initial producer snapshot is `20260430T000000Z`, which covers the current Dockerfile bootstrap pins and the known stale `vim=2:9.1.0016-1ubuntu7.12` failure case.
-- `apt-pin` has no fallback default.
-- Makefile migration will use the same variable once the Dockerfile path is proven.
+- `apt-pin` has no fallback default and does not accept `APT_PIN_SNAPSHOT` as another authority.
+- Future Makefile migration should use a first prereq such as `apt_snapshot_20260601` to advance `/etc/apt/apt.conf.d/50snapshot`, run `apt-pin update -qq`, and then build the new package prereqs.
+- Block progression is expected to be monotonic; old prereqs are not expected to be manually rerun after later snapshot transitions.
 
 ### Future OCI/blob-cache backend
 
@@ -97,11 +113,11 @@ These are deliberately not v1 decisions:
 
 ## Decision Lock Summary
 
-- `DI-007-20260513-190436`: v1 is `apt-pin`, not `apt-oci`.
-- `DI-007-20260513-190436`: the required configuration source is `APT_PIN_SNAPSHOT`.
-- `DI-007-20260513-190436`: the runtime path is `/usr/local/bin/apt-pin`.
-- `DI-007-20260513-190436`: the source path is `bin/apt-pin`.
-- `DI-007-20260513-190436`: Makefile package target migration is deferred.
+- `DI-007-20260513-195450`: v1 is `apt-pin`, not `apt-oci`.
+- `DI-007-20260513-195450`: the required configuration source is APT's `APT::Snapshot`.
+- `DI-007-20260513-195450`: the runtime path is `/usr/local/bin/apt-pin`.
+- `DI-007-20260513-195450`: the source path is `bin/apt-pin`.
+- `DI-007-20260513-195450`: Makefile package target migration is deferred.
 
 ## Subtasks
 
@@ -111,5 +127,5 @@ These are deliberately not v1 decisions:
 - [x] 007.4 Implement `bin/apt-pin` as the v1 APT snapshot passthrough.
 - [x] 007.5 Install `apt-pin` into `/usr/local/bin` during the producer Dockerfile build and use it for Dockerfile package installs.
 - [ ] 007.6 Migrate Makefile package install targets from direct `apt-get` to `apt-pin` after producer-image validation.
-- [ ] 007.7 Extend selftests to validate unset snapshot failure, snapshot-backed Dockerfile installs, and later Makefile migration.
+- [ ] 007.7 Extend selftests to validate missing apt-config snapshot failure, snapshot-backed Dockerfile installs, and later Makefile migration.
 - [ ] 007.8 Design and implement the future OCI/blob-cache backend behind the `apt-pin` interface.
