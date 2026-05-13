@@ -93,6 +93,97 @@ After the genesis image is stable:
 Long-term shared setup should live in `decomk.conf` and `Makefile`; Dockerfile
 content should remain minimal.
 
+## Codespaces selftest
+
+Use `tools/selftest-codespaces.sh` to create a real Codespace, wait for it to
+become available, capture `/var/decomk`, capture remote environment evidence,
+and store the local result bundle under `/tmp`.
+
+Prerequisites:
+
+- `gh` authenticated with Codespaces access.
+- `git`, `awk`, `sort`, and `tar` available locally.
+- A branch pushed to GitHub; `gh codespace create` cannot test unpublished local
+  commits.
+
+Typical run:
+
+```bash
+tools/selftest-codespaces.sh \
+  --repo ciwg/decomk-conf-cswg \
+  --branch main \
+  --delete-after
+```
+
+Useful variants:
+
+```bash
+# Keep the Codespace for manual inspection after capture.
+tools/selftest-codespaces.sh --repo ciwg/decomk-conf-cswg --branch testing --keep
+
+# Avoid interactive machine selection if auto-resolution cannot choose one.
+tools/selftest-codespaces.sh --repo ciwg/decomk-conf-cswg --branch testing --machine basicLinux32gb --delete-after
+```
+
+The script prints `SELFTEST PASS` or `SELFTEST FAIL` at exit. It also prints the
+run directory, normally `/tmp/codespace-var-decomk-<UTC timestamp>/`. Inspect:
+
+- `metadata.env` for the Codespace name, branch, capture method, and artifact paths.
+- `remote-info.txt` for identity, OS, and `/var/decomk` evidence.
+- `codespace.log` and `codespace.log.err` for GitHub Codespaces lifecycle logs.
+- `decomk-capture/` and `decomk-capture.tgz` for the captured `/var/decomk` tree.
+- `result-reasons.txt` when the selftest fails.
+
+## Image release
+
+Use `tools/release-image.sh` to build or promote a decomk checkpoint image,
+publish one immutable tag, and then move one or more channel tags. Immutable
+tags such as `block00` or `block00-rc3` are intended never to move. Channel tags
+such as `main`, `testing`, and `stable` are moving aliases.
+
+Prerequisites:
+
+- Clean git worktree, unless intentionally using `--allow-dirty`.
+- Rendered `.devcontainer/devcontainer.json` is fresh, unless intentionally using
+  `--skip-render-check`.
+- `decomk`, `docker`, `git`, `jq`, and `sort` available locally.
+- Docker authenticated to the target registry, for example GHCR.
+
+Before publishing, inspect any tag that matters:
+
+```bash
+docker manifest inspect ghcr.io/<org>/<image>:<tag>
+```
+
+Build and publish a new immutable image, then move the `main` channel:
+
+```bash
+tools/release-image.sh --immutable-tag block00-rc3 --channel main
+```
+
+Move multiple channels from the newly built image:
+
+```bash
+tools/release-image.sh \
+  --immutable-tag block00-rc3 \
+  --channel main \
+  --channel testing
+```
+
+Promote an existing source image instead of rebuilding:
+
+```bash
+tools/release-image.sh \
+  --source ghcr.io/<org>/<image>:block00-rc3 \
+  --immutable-tag block00-rc3 \
+  --channel stable
+```
+
+Use `--dry-run` first when checking command shape. The script writes release
+artifacts under `/tmp/decomk-conf-cswg-release-image-<run id>/`, including
+`metadata.env`, command logs, checkpoint build output, Docker push output, and
+per-channel tag/push logs.
+
 ## Reference
 
 - https://github.com/stevegt/decomk
