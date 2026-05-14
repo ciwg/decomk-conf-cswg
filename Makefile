@@ -107,6 +107,7 @@ GUIDesktop: \
   x11_apps_7_7_11build3 \
   x11_utils_7_7_6build2 \
   x11vnc_0_9_16_10 \
+  xterm_390_1ubuntu3 \
   xvfb_e2_21_1_12_1ubuntu1_5 \
   gui_runit_sync
 >@echo "GUI desktop mode reconciled for $(DECOMK_REMOTE_USER)"
@@ -403,6 +404,14 @@ x11_apps_7_7_11build3: apt_index_noble_2026_04_23
 
 x11_utils_7_7_6build2: apt_index_noble_2026_04_23
 >apt-get install -y -qq x11-utils=7.7+6build2
+>@touch $@
+
+# Intent: Make the shared noVNC/Openbox desktop usable from inside a consumer
+# repo by providing the standard Debian `x-terminal-emulator` command without
+# pulling in a heavier desktop terminal stack.
+# Source: DI-004-20260514-052331 (TODO/004)
+xterm_390_1ubuntu3: apt_index_noble_2026_04_23
+>apt-get install -y -qq xterm=390-1ubuntu3
 >@touch $@
 
 novnc_e1_1_3_0_2: apt_index_noble_2026_04_23

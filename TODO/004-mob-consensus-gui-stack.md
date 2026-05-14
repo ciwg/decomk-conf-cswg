@@ -8,6 +8,18 @@ Intent: Eliminate split ownership between image bootstrap, workspace config, sta
 Constraints: Keep the existing runit-backed architecture; preserve current path values; keep `DECOMK_FAIL_NOBOOT` workspace-scoped; avoid unrelated behavioral changes.
 Affects: `.devcontainer/Dockerfile`, `.devcontainer/decomk-stage0.sh`, `Makefile`, `TODO/004-mob-consensus-gui-stack.md`
 
+ID: DI-004-20260514-052331
+Date: 2026-05-14 05:23:31 UTC
+Status: active
+Decision: Treat `x-terminal-emulator` as part of the shared `GUIDesktop` contract and satisfy it with the minimal pinned `xterm=390-1ubuntu3` package from the current `20260430T000000Z` APT snapshot.
+Intent: A noVNC/Openbox desktop without a terminal is not a usable baseline GUI environment; adding `xterm` keeps the shared GUI stack small while providing the standard `x-terminal-emulator` command observed missing in the mob-sandbox consumer.
+Constraints:
+- Keep `Block10` GUI-neutral.
+- Preserve the existing runit-backed GUI architecture and service definitions.
+- Use one append-only, versioned Makefile package target for the new GUI package.
+- Do not add heavier desktop terminal stacks unless a later consumer requirement proves `xterm` insufficient.
+Affects: `Makefile`, `TODO/004-mob-consensus-gui-stack.md`, GUIDesktop consumer Codespaces.
+
 ID: DI-004-20260501-023052
 Date: 2026-05-01 02:30:52 UTC
 Status: active
@@ -63,5 +75,6 @@ GUI-specific behavior currently in that script:
 - [x] 004.5 Ensure GUI setup runs in `updateContent` and does not require package installs in `postCreate`.
 - [x] 004.6 Validate GUI and non-GUI paths end-to-end (target graph, package presence, reminder files, and startup behavior).
 - [ ] 004.7 Document migration/cleanup follow-up for `mob-sandbox` so overlapping GUI logic can be removed from `.devcontainer/postCreateCommand.sh`.
+- [x] 004.8 Add a minimal terminal-emulator provider to `GUIDesktop` after mob-sandbox showed `x-terminal-emulator` missing.
 
 Implementation note: the popup/autostart reminder behavior from the legacy script is intentionally not carried forward; this repo now uses a Desktop note file instead.
