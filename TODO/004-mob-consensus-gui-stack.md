@@ -32,6 +32,17 @@ Constraints:
 - Keep the package target append-only and versioned.
 Affects: `Makefile`, `TODO/004-mob-consensus-gui-stack.md`, GUIDesktop consumer Codespaces.
 
+ID: DI-004-20260514-172252
+Date: 2026-05-14 17:22:52 UTC
+Status: active
+Decision: Move the legacy mob-sandbox WebKitGTK sandbox workaround into the shared `GUIDesktop` runtime by exporting `WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1` from the Openbox session and pre-creating user-owned browser cache directories.
+Intent: Epiphany/WebKitGTK cannot use bubblewrap sandboxing in the current Codespaces/noVNC container constraints, and browser startup also expects writable user cache paths; putting both requirements at the Openbox session boundary makes terminals and desktop-launched GUI apps inherit the same working environment.
+Constraints:
+- Keep the workaround scoped to `GUIDesktop`; do not set the WebKit sandbox variable globally for non-GUI contexts.
+- Preserve the existing runit-backed GUI architecture and service names.
+- Own only user cache directories needed by the GUI session, not the entire home directory.
+Affects: `Makefile`, `TODO/004-mob-consensus-gui-stack.md`, GUIDesktop consumer Codespaces.
+
 ID: DI-004-20260501-023052
 Date: 2026-05-01 02:30:52 UTC
 Status: active
@@ -89,5 +100,6 @@ GUI-specific behavior currently in that script:
 - [ ] 004.7 Document migration/cleanup follow-up for `mob-sandbox` so overlapping GUI logic can be removed from `.devcontainer/postCreateCommand.sh`.
 - [x] 004.8 Add a minimal terminal-emulator provider to `GUIDesktop` after mob-sandbox showed `x-terminal-emulator` missing.
 - [x] 004.9 Add a D-Bus session boundary for Openbox child processes after Epiphany failed from the GUI desktop.
+- [x] 004.10 Move the legacy WebKitGTK sandbox workaround and browser cache ownership setup into `GUIDesktop`.
 
 Implementation note: the popup/autostart reminder behavior from the legacy script is intentionally not carried forward; this repo now uses a Desktop note file instead.

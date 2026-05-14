@@ -152,6 +152,10 @@ gui_runit_sync:
 >runtime_dir="/run/user/$$remote_uid"; \
 >install -d -m 0755 "$$runit_sv_dir" "$$runit_service_dir" "$$runit_log_dir"; \
 >install -d -o "$$remote_user" -g "$$remote_user" -m 0700 "$$runtime_dir"; \
+># Intent: Keep browser cache paths writable by the GUI user before Epiphany
+># asks WebKitGTK to add them to its sandbox path list.
+># Source: DI-004-20260514-172252 (TODO/004)
+>install -d -o "$$remote_user" -g "$$remote_user" -m 0700 "$$user_home/.cache" "$$user_home/.cache/epiphany" "$$user_home/.cache/mesa_shader_cache"; \
 ># Intent: Make the packaged noVNC web root land on the actual client page at
 ># `/` because Ubuntu's `novnc` package ships `vnc.html` but not `index.html`.
 ># Source: DI-004-20260430-194224 (TODO/004)
@@ -180,7 +184,14 @@ gui_runit_sync:
 >while ! chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir xdpyinfo >/dev/null 2>&1; do
 >  sleep 1
 >done
->exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir dbus-run-session -- openbox-session
+># Intent: Preserve the legacy mob-sandbox WebKitGTK workaround at the desktop
+># session boundary so terminals and GUI apps launched from Openbox inherit it.
+># The `WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1` variable is needed
+># until WebKitGTK 2.56.4+ and 2.62.0+ are widely available in distros,
+># which will have the fix for CVE-2024-3177 that doesn't require sandbox
+># disabling.
+># Source: DI-004-20260514-172252 (TODO/004)
+>exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 dbus-run-session -- openbox-session
 >EOF
 >chmod 0755 "$$runit_sv_dir/openbox/run"; \
 >cat > "$$runit_sv_dir/openbox/log/run" <<EOF
