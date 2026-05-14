@@ -100,6 +100,7 @@ FPGA: OSS I2C COCOTB
 # desktop behavior without moving init configuration into /var/decomk.
 # Source: DI-004-20260430-182956 (TODO/004)
 GUIDesktop: \
+  dbus_x11_1_14_10_4ubuntu4_1 \
   epiphany_browser_46_5_0ubuntu1 \
   novnc_e1_1_3_0_2 \
   openbox_3_6_1_12build5 \
@@ -139,8 +140,8 @@ gui_runit_sync:
 >  echo "ERROR: unable to resolve home directory for $$remote_user"; \
 >  exit 1; \
 >fi; \
->if ! command -v sv >/dev/null 2>&1 || ! command -v chpst >/dev/null 2>&1 || ! command -v svlogd >/dev/null 2>&1; then \
->  echo "ERROR: runit tools are missing; rebuild and republish the producer image before running GUIDesktop"; \
+>if ! command -v sv >/dev/null 2>&1 || ! command -v chpst >/dev/null 2>&1 || ! command -v svlogd >/dev/null 2>&1 || ! command -v dbus-run-session >/dev/null 2>&1; then \
+>  echo "ERROR: runit or D-Bus session tools are missing; rebuild and republish the producer image before running GUIDesktop"; \
 >  exit 1; \
 >fi; \
 >pid1="$$(ps -p 1 -o comm= | tr -d '[:space:]')"; \
@@ -179,7 +180,7 @@ gui_runit_sync:
 >while ! chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir xdpyinfo >/dev/null 2>&1; do
 >  sleep 1
 >done
->exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir openbox-session
+>exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir dbus-run-session -- openbox-session
 >EOF
 >chmod 0755 "$$runit_sv_dir/openbox/run"; \
 >cat > "$$runit_sv_dir/openbox/log/run" <<EOF
@@ -388,6 +389,14 @@ python3_3_12_3_0ubuntu2_1: apt_index_noble_2026_04_23
 
 openbox_3_6_1_12build5: apt_index_noble_2026_04_23
 >apt-get install -y -qq openbox=3.6.1-12build5
+>@touch $@
+
+# Intent: Provide a D-Bus session launcher for the Openbox service so Epiphany,
+# libportal, and other desktop applications inherit a coherent user session bus
+# instead of aborting or depending on fragile per-command autolaunch behavior.
+# Source: DI-004-20260514-053926 (TODO/004)
+dbus_x11_1_14_10_4ubuntu4_1: apt_index_noble_2026_04_23
+>apt-get install -y -qq dbus-x11=1.14.10-4ubuntu4.1
 >@touch $@
 
 x11vnc_0_9_16_10: apt_index_noble_2026_04_23

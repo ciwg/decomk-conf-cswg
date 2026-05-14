@@ -20,6 +20,18 @@ Constraints:
 - Do not add heavier desktop terminal stacks unless a later consumer requirement proves `xterm` insufficient.
 Affects: `Makefile`, `TODO/004-mob-consensus-gui-stack.md`, GUIDesktop consumer Codespaces.
 
+ID: DI-004-20260514-053926
+Date: 2026-05-14 05:39:26 UTC
+Status: active
+Decision: Treat a user D-Bus session as part of the shared `GUIDesktop` runtime by installing pinned `dbus-x11=1.14.10-4ubuntu4.1` and launching `openbox-session` through `dbus-run-session`.
+Intent: Epiphany/libportal and similar desktop applications expect a session bus when launched from the noVNC/Openbox desktop; wiring the bus at the Openbox service boundary gives desktop child processes one coherent GUI session instead of relying on per-command autolaunch behavior.
+Constraints:
+- Keep `Block10` GUI-neutral.
+- Preserve the existing runit-backed GUI architecture and service names.
+- Do not introduce a systemd user session dependency.
+- Keep the package target append-only and versioned.
+Affects: `Makefile`, `TODO/004-mob-consensus-gui-stack.md`, GUIDesktop consumer Codespaces.
+
 ID: DI-004-20260501-023052
 Date: 2026-05-01 02:30:52 UTC
 Status: active
@@ -76,5 +88,6 @@ GUI-specific behavior currently in that script:
 - [x] 004.6 Validate GUI and non-GUI paths end-to-end (target graph, package presence, reminder files, and startup behavior).
 - [ ] 004.7 Document migration/cleanup follow-up for `mob-sandbox` so overlapping GUI logic can be removed from `.devcontainer/postCreateCommand.sh`.
 - [x] 004.8 Add a minimal terminal-emulator provider to `GUIDesktop` after mob-sandbox showed `x-terminal-emulator` missing.
+- [x] 004.9 Add a D-Bus session boundary for Openbox child processes after Epiphany failed from the GUI desktop.
 
 Implementation note: the popup/autostart reminder behavior from the legacy script is intentionally not carried forward; this repo now uses a Desktop note file instead.
