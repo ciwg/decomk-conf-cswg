@@ -20,14 +20,14 @@ COPY bin/apt-pin /usr/local/bin/apt-pin
 RUN chmod 0755 /usr/local/bin/apt-pin 
 RUN printf 'APT::Snapshot "%s";\n' "20260430T000000Z" > /etc/apt/apt.conf.d/50snapshot 
 RUN apt-get update -qq 
-RUN apt-pin install bash=5.2.21-2ubuntu4 
-RUN apt-pin install ca-certificates=20240203 
-RUN apt-pin install git=1:2.43.0-1ubuntu7.3 
-RUN apt-pin install make=4.3-4.1build2 
-RUN apt-pin install runit=2.1.2-59ubuntu1 
-RUN apt-pin install sudo=1.9.15p5-3ubuntu5.24.04.2 
-RUN apt-pin install openssh-server=1:9.6p1-3ubuntu13.16
-RUN apt-pin install golang-1.24=1.24.4-1ubuntu1~24.04.1
+RUN apt-pin install -y bash=5.2.21-2ubuntu4 
+RUN apt-pin install -y ca-certificates=20240203 
+RUN apt-pin install -y git=1:2.43.0-1ubuntu7.3 
+RUN apt-pin install -y make=4.3-4.1build2 
+RUN apt-pin install -y runit=2.1.2-59ubuntu1 
+RUN apt-pin install -y sudo=1.9.15p5-3ubuntu5.24.04.2 
+RUN apt-pin install -y openssh-server=1:9.6p1-3ubuntu13.16
+RUN apt-pin install -y golang-1.24=1.24.4-1ubuntu1~24.04.1
 
 # Intent: Keep local producer-image bootstrap reproducible as Ubuntu noble
 # security updates advance without changing the producer image's minimal,
