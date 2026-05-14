@@ -11,6 +11,8 @@ set -euo pipefail
 # retention. A later backend for `apt-pin` can fetch or populate OCI-backed
 # package bundles, probably using e.g. 'oras'.  Source: DI-007-20260513-195450
 
+export DEBIAN_FRONTEND=noninteractive 
+
 usage() {
   cat <<'USAGE'
 Usage:
