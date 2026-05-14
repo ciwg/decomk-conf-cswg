@@ -4,6 +4,13 @@ set -euo pipefail
 # Intent: Require the system APT configuration to name the current Ubuntu
 # archive snapshot, then preserve normal apt-get command semantics for
 # Dockerfile and later Makefile call sites. Source: DI-007-20260513-195450
+#
+# Intent: Keep this wrapper as the stable package-install interface while the
+# backend evolves. Ubuntu snapshots give us an immediate answer for mirror churn
+# and stale package pins, but Canonical does not promise indefinite snapshot
+# retention. A later backend can teach `apt-pin` to fetch or populate OCI-backed
+# package bundles without forcing every Dockerfile and Makefile call site to
+# change names again. Source: DI-007-20260513-195450
 
 usage() {
   cat <<'USAGE'

@@ -43,6 +43,17 @@ Constraints:
 Affects: `bin/apt-pin`, `.devcontainer/Dockerfile`, `TODO/007-apt-oci-cache.md`, `docs/thought-experiments/TE-20260513-180434-apt-pin-cache-authority.md`
 Supersedes: DI-007-20260513-190436
 
+ID: DI-007-20260514-050759
+Date: 2026-05-14 05:07:59 UTC
+Status: active
+Decision: Align the `Block10` `openssh-client` package target with the image-owned `20260430T000000Z` APT snapshot by moving the pinned version from `1:9.6p1-3ubuntu13.15` to `1:9.6p1-3ubuntu13.16`.
+Intent: Fix the mob-sandbox consumer selftest failure without broadening the change into the deferred Makefile `apt-pin` migration; the published `main` image already pins raw `apt-get` to the snapshot, and Docker validation showed every current Makefile package pin except `openssh-client=1:9.6p1-3ubuntu13.15` is installable from that snapshot.
+Constraints:
+- Keep the Makefile using direct `apt-get` for now because `DI-007-20260513-195450` explicitly defers the broader Makefile migration.
+- Preserve versioned Makefile target names so the changed package version is visible in the dependency graph.
+- Do not change the producer image snapshot while fixing this consumer-only pin mismatch.
+Affects: `Makefile`, `TODO/007-apt-oci-cache.md`, consumer Codespaces that install `Block10`.
+
 ## Background / Problem
 
 We currently pin exact APT package versions in `Makefile` “Block” targets. This is convenient until upstream mirrors drop older patch versions, at which point installs fail and Codespaces builds break.
@@ -118,6 +129,7 @@ These are deliberately not v1 decisions:
 - `DI-007-20260513-195450`: the runtime path is `/usr/local/bin/apt-pin`.
 - `DI-007-20260513-195450`: the source path is `bin/apt-pin`.
 - `DI-007-20260513-195450`: Makefile package target migration is deferred.
+- `DI-007-20260514-050759`: `Block10` uses `openssh-client=1:9.6p1-3ubuntu13.16` for the current `20260430T000000Z` snapshot.
 
 ## Subtasks
 
@@ -129,3 +141,4 @@ These are deliberately not v1 decisions:
 - [ ] 007.6 Migrate Makefile package install targets from direct `apt-get` to `apt-pin` after producer-image validation.
 - [ ] 007.7 Extend selftests to validate missing apt-config snapshot failure, snapshot-backed Dockerfile installs, and later Makefile migration.
 - [ ] 007.8 Design and implement the future OCI/blob-cache backend behind the `apt-pin` interface.
+- [x] 007.9 Align the `Block10` `openssh-client` pin with the current producer image snapshot after the mob-sandbox consumer selftest failed.

@@ -67,7 +67,7 @@ Block00: hello-test
 Block10: Block00 \
   vim_2_9_1_0016_1ubuntu7_12 \
   neovim_0_9_5_6ubuntu2 \
-  openssh_client_e1_9_6p1_3ubuntu13_15 \
+  openssh_client_e1_9_6p1_3ubuntu13_16 \
   curl_8_5_0_2ubuntu10_8 \
   wget_1_21_4_1ubuntu4_1 \
   git_e1_2_43_0_1ubuntu7_3 \
@@ -306,8 +306,12 @@ neovim_0_9_5_6ubuntu2: apt_index_noble_2026_04_23
 >apt-get install -y -qq neovim=0.9.5-6ubuntu2
 >@touch $@
 
-openssh_client_e1_9_6p1_3ubuntu13_15: apt_index_noble_2026_04_23
->apt-get install -y -qq openssh-client=1:9.6p1-3ubuntu13.15
+# Intent: Match the producer image's configured Ubuntu snapshot; the older
+# 13.15 pin is not present in `20260430T000000Z`, while 13.16 is present and
+# already matches the Dockerfile's OpenSSH bootstrap version.
+# Source: DI-007-20260514-050759 (TODO/007)
+openssh_client_e1_9_6p1_3ubuntu13_16: apt_index_noble_2026_04_23
+>apt-get install -y -qq openssh-client=1:9.6p1-3ubuntu13.16
 >@touch $@
 
 curl_8_5_0_2ubuntu10_8: apt_index_noble_2026_04_23
