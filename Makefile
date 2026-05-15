@@ -93,7 +93,7 @@ dubious-delete-me: Block10 \
 # Repo-special feature targets
 # -----------------------------------------------------------------------------
 
-FPGA_1: OSS_20260307 COCOTB_2_0_1
+FPGA_1: GUIDesktop_1 OSS_20260307 COCOTB_2_0_1
 
 # Intent: Keep GUI packages isolated from Block10 and reconcile GUI services in
 # the standard runit system paths on every GUI update so repo context controls
