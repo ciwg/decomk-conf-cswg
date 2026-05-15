@@ -33,7 +33,7 @@ AS_DEV = runuser -u $(DECOMK_REMOTE_USER) --
 endif
 endif
 
-.PHONY: all updateContent postCreate GUIDesktop gui_runit_sync postCreateGUIDesktopNote postCreateUserDemo
+.PHONY: all updateContent postCreate GUIDesktop_1 gui_runit_sync postCreateGUIDesktopNote postCreateUserDemo
 
 # `all` is for manual updates and testing
 all: updateContent
