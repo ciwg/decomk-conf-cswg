@@ -16,7 +16,8 @@ Options:
                              Default: decomk-capture-<UTC timestamp>
   --devcontainer-path PATH   devcontainer.json path for codespace create.
   --machine NAME             Machine type for codespace create.
-                             Default: auto-resolve non-interactively.
+                             Default: auto-resolve non-interactively,
+                             then fallback to basicLinux32gb.
   --location NAME            Codespace region (EastUs, WestEurope, etc).
   --idle-timeout DURATION    e.g. 30m, 1h.
   --retention-period DUR     e.g. 1h, 72h.
@@ -33,6 +34,10 @@ USAGE
 
 SELFTEST_RESULT="FAIL"
 SELFTEST_RUN_ROOT=""
+# Intent: Keep selftest runnable in unattended contexts when GitHub's machine
+# lookup APIs return no result, while preserving --machine as the explicit
+# operator override. Source: DI-008-20260515-040231 (TODO/008)
+DEFAULT_MACHINE="basicLinux32gb"
 
 finalize_selftest() {
   local exit_code="$1"
@@ -437,9 +442,10 @@ main() {
     fi
   fi
   if [[ -z "$machine" ]]; then
-    echo "ERROR: unable to resolve machine non-interactively for ${repo}" >&2
-    echo "Pass --machine <name> to avoid interactive machine selection prompts." >&2
-    return 1
+    machine="$DEFAULT_MACHINE"
+    echo "WARN: unable to resolve machine non-interactively for ${repo}; using fallback: ${machine}" >&2
+    echo "WARN: override the machine with:" >&2
+    printf 'WARN:   %q --repo %q --branch %q --machine <name>\n' "$0" "$repo" "$branch" >&2
   fi
 
   local ts

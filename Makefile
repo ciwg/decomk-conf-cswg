@@ -93,13 +93,13 @@ dubious-delete-me: Block10 \
 # Repo-special feature targets
 # -----------------------------------------------------------------------------
 
-FPGA: OSS I2C COCOTB
+FPGA_1: OSS_20260307 COCOTB_2_0_1
 
 # Intent: Keep GUI packages isolated from Block10 and reconcile GUI services in
 # the standard runit system paths on every GUI update so repo context controls
 # desktop behavior without moving init configuration into /var/decomk.
 # Source: DI-004-20260430-182956 (TODO/004)
-GUIDesktop: \
+GUIDesktop_1: \
   dbus_x11_1_14_10_4ubuntu4_1 \
   epiphany_browser_46_5_0ubuntu1 \
   novnc_e1_1_3_0_2 \
@@ -111,7 +111,6 @@ GUIDesktop: \
   xterm_390_1ubuntu3 \
   xvfb_e2_21_1_12_1ubuntu1_5 \
   gui_runit_sync
->@echo "GUI desktop mode reconciled for $(DECOMK_REMOTE_USER)"
 
 # Intent: Reconcile the GUI services into /etc/sv and /etc/service on every
 # GUI update so the producer image can stay GUI-neutral while mob-sandbox gains
@@ -308,15 +307,15 @@ hello-test:
 # mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 
 apt_index_noble_2026_04_23:
->apt-get update -qq
+>apt-pin update -qq
 >@touch $@
 
 vim_2_9_1_0016_1ubuntu7_12: apt_index_noble_2026_04_23
->apt-get install -y -qq vim=2:9.1.0016-1ubuntu7.12
+>apt-pin install -y -qq vim=2:9.1.0016-1ubuntu7.12
 >@touch $@
 
 neovim_0_9_5_6ubuntu2: apt_index_noble_2026_04_23
->apt-get install -y -qq neovim=0.9.5-6ubuntu2
+>apt-pin install -y -qq neovim=0.9.5-6ubuntu2
 >@touch $@
 
 # Intent: Match the producer image's configured Ubuntu snapshot; the older
@@ -324,74 +323,74 @@ neovim_0_9_5_6ubuntu2: apt_index_noble_2026_04_23
 # already matches the Dockerfile's OpenSSH bootstrap version.
 # Source: DI-007-20260514-050759 (TODO/007)
 openssh_client_e1_9_6p1_3ubuntu13_16: apt_index_noble_2026_04_23
->apt-get install -y -qq openssh-client=1:9.6p1-3ubuntu13.16
+>apt-pin install -y -qq openssh-client=1:9.6p1-3ubuntu13.16
 >@touch $@
 
 curl_8_5_0_2ubuntu10_8: apt_index_noble_2026_04_23
->apt-get install -y -qq curl=8.5.0-2ubuntu10.8
+>apt-pin install -y -qq curl=8.5.0-2ubuntu10.8
 >@touch $@
 
 wget_1_21_4_1ubuntu4_1: apt_index_noble_2026_04_23
->apt-get install -y -qq wget=1.21.4-1ubuntu4.1
+>apt-pin install -y -qq wget=1.21.4-1ubuntu4.1
 >@touch $@
 
 git_e1_2_43_0_1ubuntu7_3: apt_index_noble_2026_04_23
->apt-get install -y -qq git=1:2.43.0-1ubuntu7.3
+>apt-pin install -y -qq git=1:2.43.0-1ubuntu7.3
 >@touch $@
 
 jq_1_7_1_3ubuntu0_24_04_1: apt_index_noble_2026_04_23
->apt-get install -y -qq jq=1.7.1-3ubuntu0.24.04.1
+>apt-pin install -y -qq jq=1.7.1-3ubuntu0.24.04.1
 >@touch $@
 
 make_4_3_4_1build2: apt_index_noble_2026_04_23
->apt-get install -y -qq make=4.3-4.1build2
+>apt-pin install -y -qq make=4.3-4.1build2
 >@touch $@
 
 python3_pip_24_0_dfsg_1ubuntu1_3: apt_index_noble_2026_04_23
->apt-get install -y -qq python3-pip=24.0+dfsg-1ubuntu1.3
+>apt-pin install -y -qq python3-pip=24.0+dfsg-1ubuntu1.3
 >@touch $@
 
 build_essential_12_10ubuntu1: apt_index_noble_2026_04_23
->apt-get install -y -qq build-essential=12.10ubuntu1
+>apt-pin install -y -qq build-essential=12.10ubuntu1
 >@touch $@
 
 libssl_dev_3_0_13_0ubuntu3_9: apt_index_noble_2026_04_23
->apt-get install -y -qq libssl-dev=3.0.13-0ubuntu3.9
+>apt-pin install -y -qq libssl-dev=3.0.13-0ubuntu3.9
 >@touch $@
 
 zlib1g_dev_e1_1_3_dfsg_3_1ubuntu2_1: apt_index_noble_2026_04_23
->apt-get install -y -qq zlib1g-dev=1:1.3.dfsg-3.1ubuntu2.1
+>apt-pin install -y -qq zlib1g-dev=1:1.3.dfsg-3.1ubuntu2.1
 >@touch $@
 
 libbz2_dev_1_0_8_5_1build0_1: apt_index_noble_2026_04_23
->apt-get install -y -qq libbz2-dev=1.0.8-5.1build0.1
+>apt-pin install -y -qq libbz2-dev=1.0.8-5.1build0.1
 >@touch $@
 
 libreadline_dev_8_2_4build1: apt_index_noble_2026_04_23
->apt-get install -y -qq libreadline-dev=8.2-4build1
+>apt-pin install -y -qq libreadline-dev=8.2-4build1
 >@touch $@
 
 libsqlite3_dev_3_45_1_1ubuntu2_5: apt_index_noble_2026_04_23
->apt-get install -y -qq libsqlite3-dev=3.45.1-1ubuntu2.5
+>apt-pin install -y -qq libsqlite3-dev=3.45.1-1ubuntu2.5
 >@touch $@
 
 libffi_dev_3_4_6_1build1: apt_index_noble_2026_04_23
->apt-get install -y -qq libffi-dev=3.4.6-1build1
+>apt-pin install -y -qq libffi-dev=3.4.6-1build1
 >@touch $@
 
 liblzma_dev_5_6_1_really5_4_5_1ubuntu0_2: apt_index_noble_2026_04_23
->apt-get install -y -qq liblzma-dev=5.6.1+really5.4.5-1ubuntu0.2
+>apt-pin install -y -qq liblzma-dev=5.6.1+really5.4.5-1ubuntu0.2
 >@touch $@
 
 # Intent: Keep language runtimes on distro-managed packages for this container
 # flow; versioning stays append-only by using versioned target names.
 # Source: DI-002-20260423-192405 (TODO/002)
 golang_go_e2_1_22_2build1: apt_index_noble_2026_04_23
->apt-get install -y -qq golang-go=2:1.22~2build1
+>apt-pin install -y -qq golang-go=2:1.22~2build1
 >@touch $@
 
 python3_3_12_3_0ubuntu2_1: apt_index_noble_2026_04_23
->apt-get install -y -qq python3=3.12.3-0ubuntu2.1
+>apt-pin install -y -qq python3=3.12.3-0ubuntu2.1
 >@touch $@
 
 # -----------------------------------------------------------------------------
@@ -399,7 +398,7 @@ python3_3_12_3_0ubuntu2_1: apt_index_noble_2026_04_23
 # -----------------------------------------------------------------------------
 
 openbox_3_6_1_12build5: apt_index_noble_2026_04_23
->apt-get install -y -qq openbox=3.6.1-12build5
+>apt-pin install -y -qq openbox=3.6.1-12build5
 >@touch $@
 
 # Intent: Provide a D-Bus session launcher for the Openbox service so Epiphany,
@@ -407,23 +406,23 @@ openbox_3_6_1_12build5: apt_index_noble_2026_04_23
 # instead of aborting or depending on fragile per-command autolaunch behavior.
 # Source: DI-004-20260514-053926 (TODO/004)
 dbus_x11_1_14_10_4ubuntu4_1: apt_index_noble_2026_04_23
->apt-get install -y -qq dbus-x11=1.14.10-4ubuntu4.1
+>apt-pin install -y -qq dbus-x11=1.14.10-4ubuntu4.1
 >@touch $@
 
 x11vnc_0_9_16_10: apt_index_noble_2026_04_23
->apt-get install -y -qq x11vnc=0.9.16-10
+>apt-pin install -y -qq x11vnc=0.9.16-10
 >@touch $@
 
 xvfb_e2_21_1_12_1ubuntu1_5: apt_index_noble_2026_04_23
->apt-get install -y -qq xvfb=2:21.1.12-1ubuntu1.5
+>apt-pin install -y -qq xvfb=2:21.1.12-1ubuntu1.5
 >@touch $@
 
 x11_apps_7_7_11build3: apt_index_noble_2026_04_23
->apt-get install -y -qq x11-apps=7.7+11build3
+>apt-pin install -y -qq x11-apps=7.7+11build3
 >@touch $@
 
 x11_utils_7_7_6build2: apt_index_noble_2026_04_23
->apt-get install -y -qq x11-utils=7.7+6build2
+>apt-pin install -y -qq x11-utils=7.7+6build2
 >@touch $@
 
 # Intent: Make the shared noVNC/Openbox desktop usable from inside a consumer
@@ -431,62 +430,35 @@ x11_utils_7_7_6build2: apt_index_noble_2026_04_23
 # pulling in a heavier desktop terminal stack.
 # Source: DI-004-20260514-052331 (TODO/004)
 xterm_390_1ubuntu3: apt_index_noble_2026_04_23
->apt-get install -y -qq xterm=390-1ubuntu3
+>apt-pin install -y -qq xterm=390-1ubuntu3
 >@touch $@
 
 novnc_e1_1_3_0_2: apt_index_noble_2026_04_23
->apt-get install -y -qq novnc=1:1.3.0-2
+>apt-pin install -y -qq novnc=1:1.3.0-2
 >@touch $@
 
 websockify_0_10_0_dfsg1_5build2: apt_index_noble_2026_04_23
->apt-get install -y -qq websockify=0.10.0+dfsg1-5build2
+>apt-pin install -y -qq websockify=0.10.0+dfsg1-5build2
 >@touch $@
 
 epiphany_browser_46_5_0ubuntu1: apt_index_noble_2026_04_23
->apt-get install -y -qq epiphany-browser=46.5-0ubuntu1
+>apt-pin install -y -qq epiphany-browser=46.5-0ubuntu1
 >@touch $@
 
 # -----------------------------------------------------------------------------
 # FPGA-specific tools
 # -----------------------------------------------------------------------------
 
-OSS: wget_1_21_4_1ubuntu4_1
->if [[ -x "/opt/oss-cad-suite/bin/iverilog" ]]; then \
->  echo "oss-cad-suite already installed, skipping"; \
->else \
->  wget -q "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-03-07/oss-cad-suite-linux-x64-20260307.tgz" -O /tmp/oss-cad-suite.tgz; \
->  mkdir -p /opt; \
->  tar xzf /tmp/oss-cad-suite.tgz -C /opt; \
->  rm -f /tmp/oss-cad-suite.tgz; \
->fi
+OSS_20260307: wget_1_21_4_1ubuntu4_1
+>wget -q "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-03-07/oss-cad-suite-linux-x64-20260307.tgz" -O /tmp/oss-cad-suite.tgz; \
+>mkdir -p /opt; \
+>tar xzf /tmp/oss-cad-suite.tgz -C /opt; \
+>rm -f /tmp/oss-cad-suite.tgz; \
 >echo 'export PATH="/opt/oss-cad-suite/bin:$$PATH"' > /etc/profile.d/oss-cad-suite.sh
 >@touch $@
 
-# Intent: Fail explicitly when I2C reference clone fails so setup regressions are
-# visible; this target is part of the shared FPGA install graph.
-# Source: DI-002-20260423-182418 (TODO/002)
-I2C: git_e1_2_43_0_1ubuntu7_3
->if [[ -d "/workspaces/i2cslave/.git" ]]; then \
->  echo "I2C reference already present, skipping clone"; \
->elif [[ -e "/workspaces/i2cslave" ]]; then \
->  echo "ERROR: /workspaces/i2cslave exists but is not a git checkout"; \
->  exit 1; \
->else \
->  mkdir -p /workspaces; \
->  if ! GIT_TERMINAL_PROMPT=0 git clone https://github.com/AdrianSuliga/I2C-Slave-Controller.git /workspaces/i2cslave; then \
->    rc="$$?"; \
->    echo "ERROR: failed to clone I2C reference repo (rc=$$rc)"; \
->    exit "$$rc"; \
->  fi; \
->fi
->@touch $@
-
-COCOTB: python3_3_12_3_0ubuntu2_1 python3_pip_24_0_dfsg_1ubuntu1_3
->if python3 -c 'import cocotb' >/dev/null 2>&1; then \
->  echo "cocotb already installed, skipping"; \
->else \
->  pip3 install cocotb==2.0.1 cocotb-bus==0.3.0; \
->fi
+COCOTB_2_0_1: python3_3_12_3_0ubuntu2_1 python3_pip_24_0_dfsg_1ubuntu1_3
+>pip3 install cocotb==2.0.1 cocotb-bus==0.3.0; \
 >@touch $@
 
 # Intent: Keep a runtime/user-level evidence hook that appends per-user entries

@@ -1,6 +1,7 @@
 # TODO Index
 
 - [ ] 007 - Add `apt-pin` APT snapshot wrapper and future OCI cache (`TODO/007-apt-oci-cache.md`)
+- [ ] 008 - Add default machine fallback for Codespaces selftest (`TODO/008-selftest-codespaces-machine-fallback.md`)
 - [ ] 005 - Add branch-channel renderer registry for devcontainer policy (`TODO/005-channel-branch-rendering.md`)
 - [ ] 004 - Define and implement mob-consensus GUI stack migration from mob-sandbox postCreate script (`TODO/004-mob-consensus-gui-stack.md`)
 - [ ] 003 - Implement GUI desktop support for mob-consensus (`TODO/003-mob-consensus-gui-desktop.md`)

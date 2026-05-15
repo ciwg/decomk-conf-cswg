@@ -105,6 +105,8 @@ Prerequisites:
 - `git`, `awk`, `sort`, and `tar` available locally.
 - A branch pushed to GitHub; `gh codespace create` cannot test unpublished local
   commits.
+- The script tries to resolve a recent or API-provided Codespaces machine, then
+  falls back to `basicLinux32gb` when no machine can be resolved.
 
 Typical run:
 
@@ -121,7 +123,7 @@ Useful variants:
 # Keep the Codespace for manual inspection after capture.
 tools/selftest-codespaces.sh --repo ciwg/decomk-conf-cswg --branch testing --keep
 
-# Avoid interactive machine selection if auto-resolution cannot choose one.
+# Override the fallback or auto-resolved machine explicitly.
 tools/selftest-codespaces.sh --repo ciwg/decomk-conf-cswg --branch testing --machine basicLinux32gb --delete-after
 ```
 
