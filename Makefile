@@ -117,185 +117,13 @@ GUIDesktop_1: \
 # the needed desktop daemons through decomk context policy.
 # Source: DI-004-20260430-182956 (TODO/004)
 gui_runit_sync:
->@remote_user="$(DECOMK_REMOTE_USER)"; \
->runit_sv_dir="$(RUNIT_SV_DIR)"; \
->runit_service_dir="$(RUNIT_SERVICE_DIR)"; \
->runit_log_dir="$(RUNIT_LOG_DIR)"; \
->if [[ -z "$$remote_user" ]]; then \
->  echo "ERROR: DECOMK_REMOTE_USER must be set by the container/stage-0 environment"; \
->  exit 1; \
->fi; \
->if [[ -z "$$runit_sv_dir" || -z "$$runit_service_dir" || -z "$$runit_log_dir" ]]; then \
->  echo "ERROR: RUNIT_SV_DIR, RUNIT_SERVICE_DIR, and RUNIT_LOG_DIR must be set by the container environment"; \
->  exit 1; \
->fi; \
->remote_uid="$$(id -u "$$remote_user" 2>/dev/null || true)"; \
->user_home="$$(getent passwd "$$remote_user" | cut -d: -f6)"; \
->if [[ -z "$$remote_uid" ]]; then \
->  echo "ERROR: unable to resolve uid for $$remote_user"; \
->  exit 1; \
->fi; \
->if [[ -z "$$user_home" ]]; then \
->  echo "ERROR: unable to resolve home directory for $$remote_user"; \
->  exit 1; \
->fi; \
->if ! command -v sv >/dev/null 2>&1 || ! command -v chpst >/dev/null 2>&1 || ! command -v svlogd >/dev/null 2>&1 || ! command -v dbus-run-session >/dev/null 2>&1; then \
->  echo "ERROR: runit or D-Bus session tools are missing; rebuild and republish the producer image before running GUIDesktop"; \
->  exit 1; \
->fi; \
->pid1="$$(ps -p 1 -o comm= | tr -d '[:space:]')"; \
->if [[ "$$pid1" != "runsvdir" ]]; then \
->  echo "ERROR: PID 1 is '$$pid1'; rebuild and republish the producer image so runsvdir is the entrypoint before running GUIDesktop"; \
->  exit 1; \
->fi; \
->runtime_dir="/run/user/$$remote_uid"; \
->install -d -m 0755 "$$runit_sv_dir" "$$runit_service_dir" "$$runit_log_dir"; \
->install -d -o "$$remote_user" -g "$$remote_user" -m 0700 "$$runtime_dir"; \
-># Intent: Keep browser cache paths writable by the GUI user before Epiphany
-># asks WebKitGTK to add them to its sandbox path list.
-># Source: DI-004-20260514-172252 (TODO/004)
->install -d -o "$$remote_user" -g "$$remote_user" -m 0700 "$$user_home/.cache" "$$user_home/.cache/epiphany" "$$user_home/.cache/mesa_shader_cache"; \
-># Intent: Make the packaged noVNC web root land on the actual client page at
-># `/` because Ubuntu's `novnc` package ships `vnc.html` but not `index.html`.
-># Source: DI-004-20260430-194224 (TODO/004)
->if [[ -d /usr/share/novnc ]] && [[ -e /usr/share/novnc/vnc.html ]] && [[ ! -e /usr/share/novnc/index.html ]]; then \
->  ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html; \
->fi; \
->for service in xvfb openbox x11vnc novnc; do \
->  install -d -m 0755 "$$runit_sv_dir/$$service/log"; \
->  install -d -m 0755 "$$runit_log_dir/$$service"; \
->done; \
->cat > "$$runit_sv_dir/xvfb/run" <<EOF
->#!/bin/bash
->set -euo pipefail
->exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir Xvfb $(GUI_DISPLAY) -screen 0 1920x1080x24 -ac -nolisten tcp
->EOF
->chmod 0755 "$$runit_sv_dir/xvfb/run"; \
->cat > "$$runit_sv_dir/xvfb/log/run" <<EOF
->#!/bin/bash
->set -euo pipefail
->exec svlogd -tt "$$runit_log_dir/xvfb"
->EOF
->chmod 0755 "$$runit_sv_dir/xvfb/log/run"; \
->cat > "$$runit_sv_dir/openbox/run" <<EOF
->#!/bin/bash
->set -euo pipefail
->while ! chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir xdpyinfo >/dev/null 2>&1; do
->  sleep 1
->done
-># Intent: Preserve the legacy mob-sandbox WebKitGTK workaround at the desktop
-># session boundary so terminals and GUI apps launched from Openbox inherit it.
-># The `WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1` variable is needed
-># until WebKitGTK 2.56.4+ and 2.62.0+ are widely available in distros,
-># which will have the fix for CVE-2024-3177 that doesn't require sandbox
-># disabling.
-># Source: DI-004-20260514-172252 (TODO/004)
->exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 dbus-run-session -- openbox-session
->EOF
->chmod 0755 "$$runit_sv_dir/openbox/run"; \
->cat > "$$runit_sv_dir/openbox/log/run" <<EOF
->#!/bin/bash
->set -euo pipefail
->exec svlogd -tt "$$runit_log_dir/openbox"
->EOF
->chmod 0755 "$$runit_sv_dir/openbox/log/run"; \
->cat > "$$runit_sv_dir/x11vnc/run" <<EOF
->#!/bin/bash
->set -euo pipefail
->while ! chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir xdpyinfo >/dev/null 2>&1; do
->  sleep 1
->done
->exec chpst -u $$remote_user:$$remote_user env DISPLAY=$(GUI_DISPLAY) HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir x11vnc -display $(GUI_DISPLAY) -forever -shared -rfbport $(GUI_VNC_PORT) -nopw -localhost
->EOF
->chmod 0755 "$$runit_sv_dir/x11vnc/run"; \
->cat > "$$runit_sv_dir/x11vnc/log/run" <<EOF
->#!/bin/bash
->set -euo pipefail
->exec svlogd -tt "$$runit_log_dir/x11vnc"
->EOF
->chmod 0755 "$$runit_sv_dir/x11vnc/log/run"; \
->cat > "$$runit_sv_dir/novnc/run" <<EOF
->#!/bin/bash
->set -euo pipefail
->while ! bash -lc 'exec 3<>/dev/tcp/127.0.0.1/$(GUI_VNC_PORT)' >/dev/null 2>&1; do
->  sleep 1
->done
->exec chpst -u $$remote_user:$$remote_user env HOME=$$user_home XDG_RUNTIME_DIR=$$runtime_dir websockify --web=/usr/share/novnc/ $(GUI_NOVNC_PORT) 127.0.0.1:$(GUI_VNC_PORT)
->EOF
->chmod 0755 "$$runit_sv_dir/novnc/run"; \
->cat > "$$runit_sv_dir/novnc/log/run" <<EOF
->#!/bin/bash
->set -euo pipefail
->exec svlogd -tt "$$runit_log_dir/novnc"
->EOF
->chmod 0755 "$$runit_sv_dir/novnc/log/run"; \
->for service in xvfb openbox x11vnc novnc; do \
->  svc_link="$$runit_service_dir/$$service"; \
->  if [[ -L "$$svc_link" ]]; then \
->    rm -f "$$svc_link"; \
->  elif [[ -e "$$svc_link" ]]; then \
->    echo "ERROR: $$svc_link exists and is not a symlink"; \
->    exit 1; \
->  fi; \
->  ln -s "$$runit_sv_dir/$$service" "$$svc_link"; \
->done; \
->for service in xvfb openbox x11vnc novnc; do \
->  supervise_ok="$$runit_service_dir/$$service/supervise/ok"; \
->  for _ in {1..20}; do \
->    if [[ -e "$$supervise_ok" ]]; then \
->      break; \
->    fi; \
->    sleep 1; \
->  done; \
->  if [[ ! -e "$$supervise_ok" ]]; then \
->    echo "ERROR: runit did not start supervising $$service"; \
->    exit 1; \
->  fi; \
->done; \
->for service in xvfb openbox x11vnc novnc; do \
->  svc_link="$$runit_service_dir/$$service"; \
->  if sv status "$$svc_link" >/dev/null 2>&1; then \
->    if ! sv restart "$$svc_link"; then \
->      rc="$$?"; \
->      echo "ERROR: failed to restart $$service (rc=$$rc)"; \
->      exit "$$rc"; \
->    fi; \
->  else \
->    if ! sv up "$$svc_link"; then \
->      rc="$$?"; \
->      echo "ERROR: failed to start $$service (rc=$$rc)"; \
->      exit "$$rc"; \
->    fi; \
->  fi; \
->  sv status "$$svc_link"; \
->done
+>GUI_DISPLAY="$(GUI_DISPLAY)" GUI_VNC_PORT="$(GUI_VNC_PORT)" GUI_NOVNC_PORT="$(GUI_NOVNC_PORT)" bash $(CONF_BIN_DIR)/gui-runit-sync.sh
 
 # Intent: Replace the legacy popup reminder with a deterministic Desktop note so
 # GUI users still get clipboard guidance without notifier/autostart complexity.
 # Source: DI-004-20260430-182956 (TODO/004)
 postCreateGUIDesktopNote:
->@remote_user="$(DECOMK_REMOTE_USER)"; \
->if [[ -z "$$remote_user" ]]; then \
->  echo "ERROR: DECOMK_REMOTE_USER must be set by the container/stage-0 environment"; \
->  exit 1; \
->fi; \
->user_home="$$(getent passwd "$$remote_user" | cut -d: -f6)"; \
->if [[ -z "$$user_home" ]]; then \
->  echo "ERROR: unable to resolve home directory for $$remote_user"; \
->  exit 1; \
->fi; \
->desktop_dir="$$user_home/Desktop"; \
->note_path="$$desktop_dir/clipboard-help.md"; \
->install -d -o "$$remote_user" -g "$$remote_user" -m 0755 "$$desktop_dir"; \
->$(AS_DEV) tee "$$note_path" >/dev/null <<'EOF'
-># noVNC Clipboard Help
->
->* Clipboard integration in browser-based desktops can be inconsistent.
->* If paste fails, use the browser's paste controls or your terminal/context-menu paste.
->* Plain-text paste is the safest option for commands and code snippets.
->EOF
->chmod 0644 "$$note_path"; \
->echo "Wrote $$note_path"
+>bash $(CONF_BIN_DIR)/write-gui-desktop-note.sh
 
 hello-test:
 >bash $(CONF_BIN_DIR)/hello-world.sh "hello-common" "$(HELLO_TEXT)" "$(DECOMK_STAGE0_PHASE)" "$(DEVCONTAINER_GUI)"
@@ -450,30 +278,15 @@ epiphany_browser_46_5_0ubuntu1: apt_index_noble_2026_04_23
 # -----------------------------------------------------------------------------
 
 OSS_20260307: wget_1_21_4_1ubuntu4_1
->wget -q "https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-03-07/oss-cad-suite-linux-x64-20260307.tgz" -O /tmp/oss-cad-suite.tgz; \
->mkdir -p /opt; \
->tar xzf /tmp/oss-cad-suite.tgz -C /opt; \
->rm -f /tmp/oss-cad-suite.tgz; \
->echo 'export PATH="/opt/oss-cad-suite/bin:$$PATH"' > /etc/profile.d/oss-cad-suite.sh
+>bash $(CONF_BIN_DIR)/install-oss-cad-suite.sh
 >@touch $@
 
 COCOTB_2_0_1: python3_3_12_3_0ubuntu2_1 python3_pip_24_0_dfsg_1ubuntu1_3
->pip3 install cocotb==2.0.1 cocotb-bus==0.3.0; \
+>bash $(CONF_BIN_DIR)/install-cocotb.sh
 >@touch $@
 
 # Intent: Keep a runtime/user-level evidence hook that appends per-user entries
 # on every postCreate run without relying on stamp-skipped file targets.
 # Source: DI-002-20260423-182418 (TODO/002)
 postCreateUserDemo:
->@user="$${GITHUB_USER:-unknown-user}"; \
->dest_dir="$(DECOMK_HOME)/users"; \
->mkdir -p "$$dest_dir"; \
->timestamp="$$({ date -u +%Y-%m-%dT%H:%M:%SZ; })"; \
->printf '%s phase=%s user=%s repo=%s gui=%s\n' \
->  "$$timestamp" \
->  "$${DECOMK_STAGE0_PHASE:-postCreate}" \
->  "$$user" \
->  "$${GITHUB_REPOSITORY:-<unset>}" \
->  "$(DEVCONTAINER_GUI)" \
->  >> "$$dest_dir/$$user.txt"; \
->echo "Appended postCreate user demo entry to $$dest_dir/$$user.txt"
+>DEVCONTAINER_GUI="$(DEVCONTAINER_GUI)" bash $(CONF_BIN_DIR)/post-create-user-demo.sh
