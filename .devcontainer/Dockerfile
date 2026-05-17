@@ -29,7 +29,7 @@ RUN apt-pin install -y sudo=1.9.15p5-3ubuntu5.24.04.2
 RUN apt-pin install -y openssh-server=1:9.6p1-3ubuntu13.16
 
 RUN apt-pin install -y golang-1.24=1.24.4-1ubuntu1~24.04.1
-RUN for f in $(/usr/lib/go-1.24/bin/go env GOROOT)/bin/*; do ln -s $f /usr/local/bin/$(basename $*); done
+RUN for f in $(/usr/lib/go-1.24/bin/go env GOROOT)/bin/*; do ln -s $f /usr/local/bin/$(basename $f); done
 
 # Intent: Keep local producer-image bootstrap reproducible as Ubuntu noble
 # security updates advance without changing the producer image's minimal,
