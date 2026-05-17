@@ -72,8 +72,7 @@ Block10: Block00 \
   wget_1_21_4_1ubuntu4_1 \
   git_e1_2_43_0_1ubuntu7_3 \
   jq_1_7_1_3ubuntu0_24_04_1 \
-  make_4_3_4_1build2 \
-  golang_go_e2_1_22_2build1 
+  make_4_3_4_1build2 
 
 dubious-delete-me: Block10 \
   python3_pip_24_0_dfsg_1ubuntu1_3 \
@@ -208,13 +207,6 @@ libffi_dev_3_4_6_1build1: apt_index_noble_2026_04_23
 
 liblzma_dev_5_6_1_really5_4_5_1ubuntu0_2: apt_index_noble_2026_04_23
 >apt-pin install -y -qq liblzma-dev=5.6.1+really5.4.5-1ubuntu0.2
->@touch $@
-
-# Intent: Keep language runtimes on distro-managed packages for this container
-# flow; versioning stays append-only by using versioned target names.
-# Source: DI-002-20260423-192405 (TODO/002)
-golang_go_e2_1_22_2build1: apt_index_noble_2026_04_23
->apt-pin install -y -qq golang-go=2:1.22~2build1
 >@touch $@
 
 python3_3_12_3_0ubuntu2_1: apt_index_noble_2026_04_23
