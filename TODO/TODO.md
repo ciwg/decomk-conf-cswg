@@ -1,5 +1,6 @@
 # TODO Index
 
+- [ ] 011 - Fix runit GUI service-name detection (`TODO/011-fix-runit-gui-service-detection.md`)
 - [ ] 007 - Add `apt-pin` APT snapshot wrapper and future OCI cache (`TODO/007-apt-oci-cache.md`)
 - [ ] 010 - Move non-trivial Makefile shell logic into bin scripts (`TODO/010-makefile-script-boundary.md`)
 - [ ] 009 - Replace OSS CAD Suite direct wget fetch with OCI cache (`TODO/009-oss-fetch-oci-cache.md`)
