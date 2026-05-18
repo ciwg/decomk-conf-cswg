@@ -119,7 +119,7 @@ codespace_selftest_create_codespace() {
   local create_log="$9"
 
   local cmd rc
-  cmd=(gh codespace create --repo "$repo" --branch "$branch" --display-name "$display_name" --default-permissions --status)
+  cmd=(gh codespace create --repo "$repo" --branch "$branch" --display-name "$display_name" --default-permissions)
 
   if [[ -n "$devcontainer_path" ]]; then
     cmd+=(--devcontainer-path "$devcontainer_path")
@@ -144,10 +144,10 @@ codespace_selftest_create_codespace() {
     echo
   } >"$create_log"
 
-  # Intent: GitHub CLI can create a Codespace and then fail while polling for
-  # status.  Do the creation step once, record its exit code, and let callers
-  # discover the new Codespace by display name before polling state themselves.
-  # Source: DI-013-20260518-054020 (TODO/013)
+  # Intent: Match the mob-sandbox pull-test pattern: avoid `--status` because it
+  # can block or time out while waiting for post-create output, then discover the
+  # created Codespace by display name and poll state explicitly. Source:
+  # DI-013-20260518-054020 (TODO/013)
   set +e
   "${cmd[@]}" 2>&1 | tee -a "$create_log"
   rc=${PIPESTATUS[0]}

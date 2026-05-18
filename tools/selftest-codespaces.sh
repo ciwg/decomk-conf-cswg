@@ -19,6 +19,7 @@ Options:
   --display-name NAME        Codespace display name.
                              Default: decomk-capture-<UTC timestamp>
   --devcontainer-path PATH   devcontainer.json path for codespace create.
+                             Default: .devcontainer/devcontainer.json
   --machine NAME             Machine type for codespace create.
                              Default: auto-resolve non-interactively,
                              then fallback to basicLinux32gb.
@@ -64,7 +65,7 @@ main() {
   local repo=""
   local branch=""
   local display_name=""
-  local devcontainer_path=""
+  local devcontainer_path=".devcontainer/devcontainer.json"
   local machine=""
   local location=""
   local idle_timeout=""
