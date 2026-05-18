@@ -10,6 +10,14 @@ Intent: Validate TODO 011 and the current GUI runtime path in a decomk-controlle
 Constraints: Keep successful GUI selftest Codespaces by default; support `--delete-after`; keep the normal `tools/selftest-codespaces.sh` command behavior compatible; avoid repo-local consumer dependencies such as `mob-sandbox` for this selftest; keep all temporary local artifacts under `/tmp`.
 Affects: `decomk.conf`, `.devcontainer/gui-selftest/devcontainer.json`, `bin/gui-runtime-healthcheck.sh`, `tools/codespace-selftest-lib.sh`, `tools/selftest-codespaces.sh`, `tools/selftest-gui-codespaces.sh`, `docs/thought-experiments/TE-20260518-054020-gui-selftest-entrypoint.md`, `TODO/013-gui-runtime-selftest.md`, and `TODO/TODO.md`.
 
+ID: DI-013-20260518-061019
+Date: 2026-05-18 06:10:19 UTC
+Status: active
+Decision: Remove `DEVCONTAINER_GUI` from decomk policy, Makefile plumbing, demo scripts, and GUI runtime health checks.
+Intent: Avoid a stale second source of GUI truth.  GUI selection is already represented by the decomk target graph (`GUIDesktop_1`, `postCreateGUIDesktopNote`) and proven by runtime service, process, HTTP, WebSocket, and desktop-note checks.
+Constraints: Do not replace the demo `gui=` field with another metadata field; ignore any external `DEVCONTAINER_GUI` value rather than adding compatibility shims; keep GUI selftest assertions tied to actual selected targets and runtime health.
+Affects: `decomk.conf`, `Makefile`, `bin/hello-world.sh`, `bin/post-create-user-demo.sh`, `bin/gui-runtime-healthcheck.sh`, and `TODO/013-gui-runtime-selftest.md`.
+
 ## Background
 
 The normal `decomk-conf-cswg` Codespaces selftest validates bootstrap and
@@ -42,6 +50,9 @@ runtime result.
   the Codespace before creation because `.devcontainer/gui-selftest/devcontainer.json`
   does not exist on remote branch `main` yet.  This runtime validation must be
   rerun after the branch containing this TODO is pushed.
+- 2026-05-18 06:10 UTC: Removed `DEVCONTAINER_GUI` live references and validated
+  that `GUI_SELFTEST_1` still resolves `Block10`, `GUIDesktop_1`, and
+  `postCreateGUIDesktopNote` through the decomk target graph.
 
 ## Acceptance Criteria
 

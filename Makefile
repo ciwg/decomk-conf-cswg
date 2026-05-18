@@ -17,7 +17,6 @@ SHELL := /bin/bash
 # Source: DI-002-20260423-182418 (TODO/002)
 
 CONF_BIN_DIR := $(DECOMK_HOME)/conf/bin
-DEVCONTAINER_GUI ?= 0
 DECOMK_MAKE_USER ?= $(shell id -un)
 GUI_DISPLAY := :0
 GUI_VNC_PORT := 5900
@@ -125,7 +124,7 @@ postCreateGUIDesktopNote:
 >bash $(CONF_BIN_DIR)/write-gui-desktop-note.sh
 
 hello-test:
->bash $(CONF_BIN_DIR)/hello-world.sh "hello-common" "$(HELLO_TEXT)" "$(DECOMK_STAGE0_PHASE)" "$(DEVCONTAINER_GUI)"
+>bash $(CONF_BIN_DIR)/hello-world.sh "hello-common" "$(HELLO_TEXT)" "$(DECOMK_STAGE0_PHASE)"
 
 # -----------------------------------------------------------------------------
 # Base tools and language runtimes
@@ -281,4 +280,4 @@ COCOTB_2_0_1: python3_3_12_3_0ubuntu2_1 python3_pip_24_0_dfsg_1ubuntu1_3
 # on every postCreate run without relying on stamp-skipped file targets.
 # Source: DI-002-20260423-182418 (TODO/002)
 postCreateUserDemo:
->DEVCONTAINER_GUI="$(DEVCONTAINER_GUI)" bash $(CONF_BIN_DIR)/post-create-user-demo.sh
+>bash $(CONF_BIN_DIR)/post-create-user-demo.sh

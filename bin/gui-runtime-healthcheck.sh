@@ -55,10 +55,6 @@ require_decomk_gui_context() {
   local update_targets
   local post_create_targets
 
-  if [[ "${DEVCONTAINER_GUI:-}" != "1" ]]; then
-    fail "DEVCONTAINER_GUI is '${DEVCONTAINER_GUI:-<unset>}', expected 1"
-  fi
-
   require_word "DECOMK_CONTEXTS" "${DECOMK_CONTEXTS:-}" "DEFAULT"
   require_word "DECOMK_CONTEXTS" "${DECOMK_CONTEXTS:-}" "GUI_SELFTEST_1"
 

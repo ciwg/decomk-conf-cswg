@@ -7,17 +7,15 @@ set -euo pipefail
 
 user="${GITHUB_USER:-unknown-user}"
 dest_dir="${DECOMK_HOME:?DECOMK_HOME must be set}/users"
-gui="${DEVCONTAINER_GUI:-0}"
 
 mkdir -p "$dest_dir"
 
 timestamp="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-printf '%s phase=%s user=%s repo=%s gui=%s\n' \
+printf '%s phase=%s user=%s repo=%s\n' \
   "$timestamp" \
   "${DECOMK_STAGE0_PHASE:-postCreate}" \
   "$user" \
   "${GITHUB_REPOSITORY:-<unset>}" \
-  "$gui" \
   >>"$dest_dir/$user.txt"
 
 echo "Appended postCreate user demo entry to $dest_dir/$user.txt"
