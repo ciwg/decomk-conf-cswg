@@ -1,0 +1,24 @@
+// GUI runtime selftest devcontainer.
+// Intent: Select GUI_SELFTEST_1 only for explicit GUI selftest runs while keeping
+// the normal producer devcontainer on its existing decomk-conf-cswg context.
+// Source: DI-013-20260518-054020 (TODO/013)
+{
+  "name": "decomk-conf-cswg-gui-selftest",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": "../.."
+  },
+  // Intent: Honor the image entrypoint so published producer images can carry
+  // the long-lived runit supervisor contract into consumer repos.
+  // Source: DI-004-20260430-182956 (TODO/004)
+  "overrideCommand": false,
+  "containerEnv": {
+    "DECOMK_CONF_URI": "git:https://github.com/ciwg/decomk-conf-cswg.git?ref=main",
+    "DECOMK_CONTEXT": "GUI_SELFTEST_1",
+    "DECOMK_FAIL_NOBOOT": "false",
+    "DECOMK_TOOL_URI": "go:github.com/stevegt/decomk/cmd/decomk@main"
+  },
+  "updateRemoteUserUID": false,
+  "updateContentCommand": "bash .devcontainer/decomk-stage0.sh updateContent",
+  "postCreateCommand": "bash .devcontainer/decomk-stage0.sh postCreate"
+}
