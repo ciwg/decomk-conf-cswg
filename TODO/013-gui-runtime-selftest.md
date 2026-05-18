@@ -40,7 +40,7 @@ runtime result.
 - [x] 013.8 Run static validation for changed shell scripts.
 - [x] 013.9 Run `DECOMK_CONTEXT=GUI_SELFTEST_1 decomk plan updateContent`.
 - [x] 013.10 Run `DECOMK_CONTEXT=GUI_SELFTEST_1 decomk plan postCreate`.
-- [ ] 013.11 Run `tools/selftest-gui-codespaces.sh --machine basicLinux32gb`.
+- [x] 013.11 Run `tools/selftest-gui-codespaces.sh --machine basicLinux32gb`.
 - [ ] 013.12 Run the normal `tools/selftest-codespaces.sh` regression check.
 
 ## Validation Notes
@@ -53,6 +53,11 @@ runtime result.
 - 2026-05-18 06:10 UTC: Removed `DEVCONTAINER_GUI` live references and validated
   that `GUI_SELFTEST_1` still resolves `Block10`, `GUIDesktop_1`, and
   `postCreateGUIDesktopNote` through the decomk target graph.
+- 2026-05-18 06:25 UTC: GUI selftest passed from
+  `/tmp/decomk-conf-cswg-gui-selftest-20260518-061714`.  It validated
+  `GUI_SELFTEST_1`, runit-managed `xvfb`, `openbox`, `x11vnc`, and `novnc`,
+  noVNC HTTP, WebSocket-to-RFB connectivity, the desktop note, and absence of the
+  TODO 011 `unsupported GUI runit service: .` log symptom.
 
 ## Acceptance Criteria
 
