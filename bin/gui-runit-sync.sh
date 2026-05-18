@@ -59,7 +59,20 @@ wait_for_vnc() {
 
 service_from_run_path() {
   local run_dir service_dir
-  run_dir="$(dirname "$0")"
+
+  # Intent: Runit changes into each service directory and executes `./run`, so
+  # `$0` does not always include `/etc/service/<name>/run`. Use the current
+  # directory for the production runit path while preserving absolute-path
+  # manual invocation for debugging. Source: DI-011-20260517-212822
+  case "$0" in
+    ./run|run)
+      run_dir="$PWD"
+      ;;
+    *)
+      run_dir="$(dirname "$0")"
+      ;;
+  esac
+
   if [[ "$(basename "$run_dir")" == "log" ]]; then
     service_dir="$(dirname "$run_dir")"
   else
@@ -240,11 +253,25 @@ sync_gui_services() {
 
 main() {
   if [[ "$(basename "$0")" == "run" ]]; then
-    if [[ "$(basename "$(dirname "$0")")" == "log" ]]; then
-      run_log_service
-    else
-      run_gui_service
-    fi
+    # Intent: Runit invokes both service `run` and `log/run` symlinks as
+    # `./run`, so dispatch must use `$PWD` for the production path and `$0` for
+    # absolute-path manual debugging. Source: DI-011-20260518-050809
+    case "$0" in
+      ./run|run)
+        if [[ "$(basename "$PWD")" == "log" ]]; then
+          run_log_service
+        else
+          run_gui_service
+        fi
+        ;;
+      *)
+        if [[ "$(basename "$(dirname "$0")")" == "log" ]]; then
+          run_log_service
+        else
+          run_gui_service
+        fi
+        ;;
+    esac
     return
   fi
 

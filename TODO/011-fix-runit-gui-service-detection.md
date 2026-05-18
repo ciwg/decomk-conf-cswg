@@ -10,6 +10,14 @@ Intent: Keep the existing single-script runit design for `xvfb`, `openbox`, `x11
 Constraints: Preserve existing service names and commands; keep manual absolute-path debugging of `/etc/sv/<service>/run` working; do not add generated per-service wrapper scripts unless a thought experiment proves the single-script approach is untenable.
 Affects: `bin/gui-runit-sync.sh`, `TODO/011-fix-runit-gui-service-detection.md`, `TODO/TODO.md`, and the `mob-sandbox` Codespaces GUI pull test.
 
+ID: DI-011-20260518-050809
+Date: 2026-05-18 05:08:09 UTC
+Status: active
+Decision: Apply the same current-directory-aware runit invocation handling to `main()` so service `run` and `log/run` symlinks dispatch to the correct runner when runit invokes either path as `./run`.
+Intent: Fix the complete single-script runit invocation path, not only service-name extraction, because production runit execution hides both the service name and the `log` directory marker from `$0`.
+Constraints: Preserve the existing single-script service layout; preserve absolute-path manual debugging; do not introduce generated wrapper scripts.
+Affects: `bin/gui-runit-sync.sh`, `TODO/011-fix-runit-gui-service-detection.md`, and the GUI service health validation path.
+
 ## Handoff Context
 
 The `mob-sandbox` Codespaces GUI build can finish with green devcontainer logs while the GUI daemons are not actually alive. The build log shows `sv restart` briefly seeing runit child processes, but later inspection shows only `runsv` supervisors remain and no long-lived `Xvfb`, `openbox`, `x11vnc`, or `websockify` processes.
@@ -108,9 +116,9 @@ If the implementing Codex sees multiple plausible designs beyond this minimal pa
 
 ## Validation Plan
 
-- [ ] 011.1 Add or update a DI entry in this TODO if the implementation differs from the recommended fix.
-- [ ] 011.2 Patch `bin/gui-runit-sync.sh` so `service_from_run_path()` supports runit `./run` and manual absolute-path invocations.
-- [ ] 011.3 Run `bash -n bin/gui-runit-sync.sh`.
+- [x] 011.1 Add or update a DI entry in this TODO if the implementation differs from the recommended fix.
+- [x] 011.2 Patch `bin/gui-runit-sync.sh` so `service_from_run_path()` supports runit `./run` and manual absolute-path invocations.
+- [x] 011.3 Run `bash -n bin/gui-runit-sync.sh`.
 - [ ] 011.4 In a container or Codespace with GUI packages installed, confirm direct production-style invocation no longer reports service `.`:
   - `cd /etc/service/xvfb && timeout 2 ./run`
   - `cd /etc/service/xvfb/log && timeout 2 ./run`
