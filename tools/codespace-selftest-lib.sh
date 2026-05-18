@@ -119,7 +119,7 @@ codespace_selftest_create_codespace() {
   local create_log="$9"
 
   local cmd rc
-  cmd=(gh codespace create --repo "$repo" --branch "$branch" --display-name "$display_name" --default-permissions)
+  cmd=(gh codespace create --repo "$repo" --branch "$branch" --display-name "$display_name" --default-permissions --status)
 
   if [[ -n "$devcontainer_path" ]]; then
     cmd+=(--devcontainer-path "$devcontainer_path")
