@@ -1,7 +1,10 @@
 // GUI runtime selftest devcontainer.
-// Intent: Select GUI_SELFTEST_1 only for explicit GUI selftest runs while keeping
+// Intent: Select GUI-SELFTEST-1 only for explicit GUI selftest runs while keeping
 // the normal producer devcontainer on its existing decomk-conf-cswg context.
-// Source: DI-013-20260518-054020 (TODO/013)
+// Source: DI-tazit (TODO-tozoh)
+// Intent: Use the hyphenated GUI selftest context name selected by the
+// repo-wide pre-Block20 naming cleanup.
+// Source: DI-ruvop (TODO-fogus)
 {
   "name": "decomk-conf-cswg-gui-selftest",
   "build": {
@@ -10,11 +13,11 @@
   },
   // Intent: Honor the image entrypoint so published producer images can carry
   // the long-lived runit supervisor contract into consumer repos.
-  // Source: DI-004-20260430-182956 (TODO/004)
+  // Source: DI-fiduv (TODO-fogup)
   "overrideCommand": false,
   "containerEnv": {
     "DECOMK_CONF_URI": "git:https://github.com/ciwg/decomk-conf-cswg.git?ref=main",
-    "DECOMK_CONTEXT": "GUI_SELFTEST_1",
+    "DECOMK_CONTEXT": "GUI-SELFTEST-1",
     "DECOMK_FAIL_NOBOOT": "false",
     "DECOMK_TOOL_URI": "go:github.com/stevegt/decomk/cmd/decomk@main"
   },

@@ -49,8 +49,8 @@
 - Before locking any non-trivial decision that will require DF questions and answers, the agent must run a thought experiment (TE) if multiple plausible designs remain.
 - A TE happens before final DF questions. Its purpose is to narrow the design space so DF questions and answers are informed by explicit scenario analysis.
 - The agent must not collapse a TE into a short opinion or recommendation. The agent must explicitly model concrete scenarios and consequences.
-- Each TE must have a unique ID in the format `TE-YYYYMMDD-HHMMSS`.
-- The TE doc filename must start with the TE ID and live under `docs/thought-experiments/`, for example: `docs/thought-experiments/TE-20260425-183100-handler-abi.md`.
+- Each new TE must have a unique proquint ID in the format `TE-<handle>`.
+- The TE doc filename must start with the TE ID and live under `docs/thought-experiments/`, for example: `docs/thought-experiments/TE-fivis-handler-abi.md`.
 
 ### TE Intake Requirements
 - Before locking decisions or asking final DF questions, the agent must identify:
@@ -58,7 +58,7 @@
   - the candidate alternatives,
   - the assumptions and threat/trust model,
   - the scope and systems affected.
-- If the TE relates to an existing TODO, the agent must reference the TODO number and subtask number (for example, `002.10`).
+- If the TE relates to an existing TODO, the agent must reference the TODO handle and subtask handle (for example, `fogus.5`).
 
 ### TE Execution Requirements
 - Each TE must evaluate the same decision across multiple concrete scenarios.
@@ -160,17 +160,17 @@
 - Changes to `/home/stevegt/lab/decomk` MUST be made by the Codex session running in the decomk repo.
 - This repo's Codex session MUST NOT edit decomk repo files directly, except for TODO handoff files that request work from the decomk Codex session.
 - Requests for decomk changes MUST be handed off by writing TODO files in the decomk repo, then asking the decomk Codex session to implement them.
-- Intent: Keep decomk implementation ownership inside the decomk workspace while allowing this repo to document precise handoff requests. Source: DI-005-20260507-153000
+- Intent: Keep decomk implementation ownership inside the decomk workspace while allowing this repo to document precise handoff requests. Source: DI-losiv
 
 ## TODO Tracking 
 - Maintain a ./TODO/ directory for tracking tasks and plans.
 - Maintain a ./TODO/TODO.md file that lists small tasks and the other TODO files.
-- Number each TODO using 3 digits, zero-padded (e.g., 001, 002).
-- Do not renumber TODOs when adding new ones; just assign the next available number.
+- Name new TODO files with proquint handles in the form `TODO/TODO-<handle>-<slug>.md`.
+- Mint new handles with `tools/mint-handle`; do not allocate integer TODO IDs.
 - Sort TODO.md by priority, not number.
-- When discussing a TODO, use its number (e.g., "fix TODO 005").
-- When completing a TODO, mark it as done by checking it off (e.g., `- [x] 005 - ...`).
-- Within a TODO/* file, include numbered checkboxes for subtasks (e.g., `- [ ] 005.1 subtask description`).
+- When discussing a TODO, use its handle (e.g., "fix TODO-sibak").
+- When completing a TODO, mark it as done by checking it off (e.g., `- [x] TODO-sibak - ...`).
+- Within a TODO/* file, include handle-prefixed checkboxes for subtasks (e.g., `- [ ] sibak.1 subtask description`).
 
 ## Editing & Documentation Standards
 - Prefer small, focused edits and avoid rearranging files without a clear need.
@@ -183,8 +183,8 @@
 - Do not treat shorter comments as better unless they preserve all important intent.
 - For any non-trivial behavior change, include a behavior-level comment with:
   - `Intent:` a short, clear rationale (a sentence or a few; no hard cap if more is needed for clarity).
-  - `Source:` a DI ID in the format `DI-NNN-YYYYMMDD-HHMMSS`.
-  - `NNN` is the TODO number of the TODO file where that DI entry resides.
+  - `Source:` a DI ID in the format `DI-<handle>`.
+  - The DI handle must be unique in the repo's proquint artifact namespace.
   - Optional: TODO file/section reference for faster lookup.
 - If a comment must be dropped with no replacement, stop and ask the user before proceeding.
 - Before editing a file, review existing comments in that file.
@@ -192,7 +192,7 @@
 - Treat DI logs as append-only history. Do not rewrite or delete prior entries.
 - When intent evolves, add a new DI entry and set `Supersedes: <old-di-id>`.
 - DI entries must include:
-  - `ID: DI-NNN-YYYYMMDD-HHMMSS`
+  - `ID: DI-<handle>`
   - `Date: YYYY-MM-DD HH:MM:SS`
   - `Status: active|superseded`
   - `Decision:`
@@ -210,9 +210,9 @@
 
 ### Comment + DI Examples
 - Comment format example:
-  - `// Intent: Keep per-client rotation state stable across reconnects to avoid cross-client session churn. Source: DI-016-20260309-093000`
+  - `// Intent: Keep per-client rotation state stable across reconnects to avoid cross-client session churn. Source: DI-fogus`
 - Decision Intent Log entry template (for TODO files):
-  - `ID: DI-NNN-YYYYMMDD-HHMMSS`
+  - `ID: DI-<handle>`
   - `Date: YYYY-MM-DD HH:MM:SS`
   - `Status: active`
   - `Decision: <what was decided>`

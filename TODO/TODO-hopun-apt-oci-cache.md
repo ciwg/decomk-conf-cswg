@@ -1,8 +1,8 @@
-# TODO 007 - apt-pin: use Ubuntu snapshots now, OCI cache later
+# TODO-hopun: apt-pin: use Ubuntu snapshots now, OCI cache later
 
 ## Decision Intent Log
 
-ID: DI-007-20260510-163752
+ID: DI-lufih
 Date: 2026-05-10 16:37:52 -0700
 Status: superseded
 Decision: Add an `apt-oci` helper that turns an `apt install <pkgs>` request into an OCI-cached bundle (requested packages + dependency closure) and always installs from the cache.
@@ -15,7 +15,7 @@ Constraints:
 - Default `DECOMK_HOME` is `/var/decomk`.
 Affects: `Makefile` package install blocks, new `tools/apt-oci` helper, Codespaces build reliability for repos using `ghcr.io/ciwg/decomk-conf-cswg:*`.
 
-ID: DI-007-20260513-190436
+ID: DI-kidiv
 Date: 2026-05-13 19:04:36 UTC
 Status: superseded
 Decision: Replace the immediate `apt-oci` implementation with `apt-pin`, a `PATH`-installed `apt-get` passthrough that requires `APT_PIN_SNAPSHOT` and injects Ubuntu's `--snapshot` option for every APT command it runs.
@@ -26,10 +26,10 @@ Constraints:
 - Fail loudly when `APT_PIN_SNAPSHOT` is unset or malformed; do not provide hidden fallbacks.
 - Keep the current Makefile package target wiring unchanged until `apt-pin` is proven in the producer image path.
 - Defer OCI bundle layout, registry location, and cache-miss population policy to a later backend decision behind the `apt-pin` interface.
-Affects: `bin/apt-pin`, `.devcontainer/Dockerfile`, `TODO/007-apt-oci-cache.md`, `TODO/TODO.md`, `docs/thought-experiments/TE-20260513-180434-apt-pin-cache-authority.md`
-Supersedes: DI-007-20260510-163752
+Affects: `bin/apt-pin`, `.devcontainer/Dockerfile`, `TODO/TODO-hopun-apt-oci-cache.md`, `TODO/TODO.md`, `docs/thought-experiments/TE-fivis-apt-pin-cache-authority.md`
+Supersedes: DI-lufih
 
-ID: DI-007-20260513-195450
+ID: DI-fifaf
 Date: 2026-05-13 19:54:50 UTC
 Status: active
 Decision: Make APT's `APT::Snapshot` configuration the v1 snapshot authority; `apt-pin` validates that configuration and delegates to plain `apt-get` without passing `--snapshot` itself.
@@ -40,19 +40,19 @@ Constraints:
 - Keep `bin/apt-pin` small enough to use before Go, ORAS, or decomk are installed.
 - Keep the current Makefile package target wiring unchanged until a later Makefile migration.
 - Assume Block* progression is monotonic; old package prereqs are not expected to be manually rerun after later snapshot transitions.
-Affects: `bin/apt-pin`, `.devcontainer/Dockerfile`, `TODO/007-apt-oci-cache.md`, `docs/thought-experiments/TE-20260513-180434-apt-pin-cache-authority.md`
-Supersedes: DI-007-20260513-190436
+Affects: `bin/apt-pin`, `.devcontainer/Dockerfile`, `TODO/TODO-hopun-apt-oci-cache.md`, `docs/thought-experiments/TE-fivis-apt-pin-cache-authority.md`
+Supersedes: DI-kidiv
 
-ID: DI-007-20260514-050759
+ID: DI-zakul
 Date: 2026-05-14 05:07:59 UTC
 Status: active
 Decision: Align the `Block10` `openssh-client` package target with the image-owned `20260430T000000Z` APT snapshot by moving the pinned version from `1:9.6p1-3ubuntu13.15` to `1:9.6p1-3ubuntu13.16`.
 Intent: Fix the mob-sandbox consumer selftest failure without broadening the change into the deferred Makefile `apt-pin` migration; the published `main` image already pins raw `apt-get` to the snapshot, and Docker validation showed every current Makefile package pin except `openssh-client=1:9.6p1-3ubuntu13.15` is installable from that snapshot.
 Constraints:
-- Keep the Makefile using direct `apt-get` for now because `DI-007-20260513-195450` explicitly defers the broader Makefile migration.
+- Keep the Makefile using direct `apt-get` for now because `DI-fifaf` explicitly defers the broader Makefile migration.
 - Preserve versioned Makefile target names so the changed package version is visible in the dependency graph.
 - Do not change the producer image snapshot while fixing this consumer-only pin mismatch.
-Affects: `Makefile`, `TODO/007-apt-oci-cache.md`, consumer Codespaces that install `Block10`.
+Affects: `Makefile`, `TODO/TODO-hopun-apt-oci-cache.md`, consumer Codespaces that install `Block10`.
 
 ## Background / Problem
 
@@ -104,7 +104,7 @@ APT config is the snapshot source of truth:
 
 ### Future OCI/blob-cache backend
 
-The future backend should keep `apt-pin install ...` as the user-facing interface. Surviving cache-design conclusions from `TE-20260513-180434`:
+The future backend should keep `apt-pin install ...` as the user-facing interface. Surviving cache-design conclusions from `TE-fivis`:
 
 - Keep fire-and-forget UX for users.
 - Allow cache population only from trusted writer environments.
@@ -124,21 +124,21 @@ These are deliberately not v1 decisions:
 
 ## Decision Lock Summary
 
-- `DI-007-20260513-195450`: v1 is `apt-pin`, not `apt-oci`.
-- `DI-007-20260513-195450`: the required configuration source is APT's `APT::Snapshot`.
-- `DI-007-20260513-195450`: the runtime path is `/usr/local/bin/apt-pin`.
-- `DI-007-20260513-195450`: the source path is `bin/apt-pin`.
-- `DI-007-20260513-195450`: Makefile package target migration is deferred.
-- `DI-007-20260514-050759`: `Block10` uses `openssh-client=1:9.6p1-3ubuntu13.16` for the current `20260430T000000Z` snapshot.
+- `DI-fifaf`: v1 is `apt-pin`, not `apt-oci`.
+- `DI-fifaf`: the required configuration source is APT's `APT::Snapshot`.
+- `DI-fifaf`: the runtime path is `/usr/local/bin/apt-pin`.
+- `DI-fifaf`: the source path is `bin/apt-pin`.
+- `DI-fifaf`: Makefile package target migration is deferred.
+- `DI-zakul`: `Block10` uses `openssh-client=1:9.6p1-3ubuntu13.16` for the current `20260430T000000Z` snapshot.
 
 ## Subtasks
 
-- [x] 007.1 Add a stable reference to a known failure log snippet so we can prove the motivation.
-- [x] 007.2 TE: Compare first-run cache population alternatives and write the TE doc under `docs/thought-experiments/` (per AGENTS.md).
-- [x] 007.3 Lock the DF decisions for the v1 snapshot-backed `apt-pin` wrapper.
-- [x] 007.4 Implement `bin/apt-pin` as the v1 APT snapshot passthrough.
-- [x] 007.5 Install `apt-pin` into `/usr/local/bin` during the producer Dockerfile build and use it for Dockerfile package installs.
-- [ ] 007.6 Migrate Makefile package install targets from direct `apt-get` to `apt-pin` after producer-image validation.
-- [ ] 007.7 Extend selftests to validate missing apt-config snapshot failure, snapshot-backed Dockerfile installs, and later Makefile migration.
-- [ ] 007.8 Design and implement the future OCI/blob-cache backend behind the `apt-pin` interface.
-- [x] 007.9 Align the `Block10` `openssh-client` pin with the current producer image snapshot after the mob-sandbox consumer selftest failed.
+- [x] hopun.1 Add a stable reference to a known failure log snippet so we can prove the motivation.
+- [x] hopun.2 TE: Compare first-run cache population alternatives and write the TE doc under `docs/thought-experiments/` (per AGENTS.md).
+- [x] hopun.3 Lock the DF decisions for the v1 snapshot-backed `apt-pin` wrapper.
+- [x] hopun.4 Implement `bin/apt-pin` as the v1 APT snapshot passthrough.
+- [x] hopun.5 Install `apt-pin` into `/usr/local/bin` during the producer Dockerfile build and use it for Dockerfile package installs.
+- [ ] hopun.6 Migrate Makefile package install targets from direct `apt-get` to `apt-pin` after producer-image validation.
+- [ ] hopun.7 Extend selftests to validate missing apt-config snapshot failure, snapshot-backed Dockerfile installs, and later Makefile migration.
+- [ ] hopun.8 Design and implement the future OCI/blob-cache backend behind the `apt-pin` interface.
+- [x] hopun.9 Align the `Block10` `openssh-client` pin with the current producer image snapshot after the mob-sandbox consumer selftest failed.

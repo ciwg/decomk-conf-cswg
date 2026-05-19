@@ -3,8 +3,12 @@ set -euo pipefail
 
 # Intent: Validate GUI runtime health from inside a Codespace after decomk has
 # selected the GUI selftest context and run both updateContent and postCreate.
-# This checks the actual service/process/network contract that TODO 011 protects.
-# Source: DI-013-20260518-054020 (TODO/013)
+# This checks the actual service/process/network contract that TODO-dagij protects.
+# Source: DI-tazit (TODO-tozoh)
+#
+# Intent: Assert the hyphenated GUI context and target names selected by the
+# repo-wide pre-Block20 naming cleanup.
+# Source: DI-ruvop (TODO-fogus)
 
 fail() {
   echo "GUI health check failed: $*" >&2
@@ -56,7 +60,7 @@ require_decomk_gui_context() {
   local post_create_targets
 
   require_word "DECOMK_CONTEXTS" "${DECOMK_CONTEXTS:-}" "DEFAULT"
-  require_word "DECOMK_CONTEXTS" "${DECOMK_CONTEXTS:-}" "GUI_SELFTEST_1"
+  require_word "DECOMK_CONTEXTS" "${DECOMK_CONTEXTS:-}" "GUI-SELFTEST-1"
 
   # shellcheck disable=SC2154
   update_targets="${updateContent:-}"
@@ -64,9 +68,9 @@ require_decomk_gui_context() {
   post_create_targets="${postCreate:-}"
 
   require_word "updateContent" "$update_targets" "Block10"
-  require_word "updateContent" "$update_targets" "GUIDesktop_1"
+  require_word "updateContent" "$update_targets" "GUIDesktop-1"
   require_word "postCreate" "$post_create_targets" "Block10"
-  require_word "postCreate" "$post_create_targets" "GUIDesktop_1"
+  require_word "postCreate" "$post_create_targets" "GUIDesktop-1"
   require_word "postCreate" "$post_create_targets" "postCreateGUIDesktopNote"
 }
 
@@ -327,10 +331,10 @@ require_no_todo011_error_in_logs() {
     case "$rc" in
       0)
         printf '%s\n' "$output" >&2
-        fail "TODO 011 runit dispatch error appears in logs under $log_root"
+        fail "TODO-dagij runit dispatch error appears in logs under $log_root"
         ;;
       1)
-        echo "no TODO 011 runit dispatch error found under $log_root"
+        echo "no TODO-dagij runit dispatch error found under $log_root"
         ;;
       *)
         printf '%s\n' "$output" >&2

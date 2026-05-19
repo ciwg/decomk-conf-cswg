@@ -89,7 +89,7 @@ run_gui_health_check() {
 
   # Intent: Send the checked-in healthcheck script over stdin so the remote
   # assertion logic exactly matches the branch being tested. Source:
-  # DI-013-20260518-054020 (TODO/013)
+  # DI-tazit (TODO-tozoh)
   gh codespace ssh --codespace "$codespace_name" -- \
     "GUI_HEALTH_READY_TIMEOUT_SECONDS=$ready_timeout_seconds GUI_HEALTH_STABLE_SECONDS=$stable_seconds bash -s" \
     >"$health_log" 2>&1 <"$healthcheck_script"

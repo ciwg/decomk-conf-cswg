@@ -1,8 +1,8 @@
-# TODO 009 - Replace OSS CAD Suite wget fetch with OCI cache
+# TODO-sapan: Replace OSS CAD Suite wget fetch with OCI cache
 
 ## Decision Intent Log
 
-ID: DI-009-20260515-042945
+ID: DI-rolat
 Date: 2026-05-15 04:29:45 UTC
 Status: active
 Decision: Replace the direct `wget` fetch in the `Makefile` `OSS_20260307` target with a cache-backed artifact fetch that uses the same future OCI cache authority planned for `apt-pin`.
@@ -45,8 +45,8 @@ Replace the direct `wget` path with a cache-backed flow that:
 
 ## Subtasks
 
-- [ ] 009.1 Run a TE comparing direct `wget`, generic OCI blob helper, `apt-pin` subcommand, and decomk-managed artifact helper designs.
-- [ ] 009.2 Lock DF decisions for cache interface name, OCI reference format, digest policy, trusted-writer behavior, and fallback behavior.
-- [ ] 009.3 Add a manifest or lock entry for the OSS CAD Suite archive, including source URL, version, digest, expected extracted root, and OCI reference.
-- [ ] 009.4 Replace the `OSS_20260307` direct `wget` recipe with the locked cache-backed fetch flow.
-- [ ] 009.5 Validate the FPGA setup path in a consumer Codespace or realistic container-like smoke test.
+- [ ] sapan.1 Run a TE comparing direct `wget`, generic OCI blob helper, `apt-pin` subcommand, and decomk-managed artifact helper designs.
+- [ ] sapan.2 Lock DF decisions for cache interface name, OCI reference format, digest policy, trusted-writer behavior, and fallback behavior.
+- [ ] sapan.3 Add a manifest or lock entry for the OSS CAD Suite archive, including source URL, version, digest, expected extracted root, and OCI reference.
+- [ ] sapan.4 Replace the `OSS_20260307` direct `wget` recipe with the locked cache-backed fetch flow.
+- [ ] sapan.5 Validate the FPGA setup path in a consumer Codespace or realistic container-like smoke test.

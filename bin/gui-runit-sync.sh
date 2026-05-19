@@ -6,7 +6,7 @@ set -euo pipefail
 # script also acts as the runit service runner when symlinked as
 # `/etc/sv/<service>/run` or `/etc/sv/<service>/log/run`, avoiding generated
 # shell scripts as runtime artifacts.
-# Source: DI-010-20260516-035351 (TODO/010)
+# Source: DI-dadak (TODO-rifol)
 
 resolve_remote_user() {
   GUI_REMOTE_USER="${DECOMK_REMOTE_USER:-}"
@@ -63,7 +63,7 @@ service_from_run_path() {
   # Intent: Runit changes into each service directory and executes `./run`, so
   # `$0` does not always include `/etc/service/<name>/run`. Use the current
   # directory for the production runit path while preserving absolute-path
-  # manual invocation for debugging. Source: DI-011-20260517-212822
+  # manual invocation for debugging. Source: DI-jitav
   case "$0" in
     ./run|run)
       run_dir="$PWD"
@@ -111,7 +111,7 @@ run_gui_service() {
       # variable is needed until WebKitGTK 2.56.4+ and 2.62.0+ are widely
       # available in distros, which will have the fix for CVE-2024-3177 that
       # does not require sandbox disabling.
-      # Source: DI-004-20260514-172252 (TODO/004)
+      # Source: DI-samat (TODO-fogup)
       run_as_gui_user DISPLAY="$GUI_DISPLAY" HOME="$GUI_USER_HOME" XDG_RUNTIME_DIR="$GUI_XDG_RUNTIME_DIR" WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1 dbus-run-session -- openbox-session
       ;;
     x11vnc)
@@ -181,18 +181,18 @@ sync_gui_services() {
   # Intent: Reconcile the GUI services into /etc/sv and /etc/service on every
   # GUI update so the producer image can stay GUI-neutral while GUI consumers
   # gain the needed desktop daemons through decomk context policy.
-  # Source: DI-004-20260430-182956 (TODO/004)
+  # Source: DI-fiduv (TODO-fogup)
   install -d -m 0755 "$RUNIT_SYNC_SV_DIR" "$RUNIT_SYNC_SERVICE_DIR" "$RUNIT_SYNC_LOG_DIR"
   install -d -o "$GUI_REMOTE_USER" -g "$GUI_REMOTE_USER" -m 0700 "$GUI_XDG_RUNTIME_DIR"
 
   # Intent: Keep browser cache paths writable by the GUI user before Epiphany
   # asks WebKitGTK to add them to its sandbox path list.
-  # Source: DI-004-20260514-172252 (TODO/004)
+  # Source: DI-samat (TODO-fogup)
   install -d -o "$GUI_REMOTE_USER" -g "$GUI_REMOTE_USER" -m 0700 "$GUI_USER_HOME/.cache" "$GUI_USER_HOME/.cache/epiphany" "$GUI_USER_HOME/.cache/mesa_shader_cache"
 
   # Intent: Make the packaged noVNC web root land on the actual client page at
   # `/` because Ubuntu's `novnc` package ships `vnc.html` but not `index.html`.
-  # Source: DI-004-20260430-194224 (TODO/004)
+  # Source: DI-bonar (TODO-fogup)
   if [[ -d /usr/share/novnc && -e /usr/share/novnc/vnc.html && ! -e /usr/share/novnc/index.html ]]; then
     ln -s /usr/share/novnc/vnc.html /usr/share/novnc/index.html
   fi
@@ -255,7 +255,7 @@ main() {
   if [[ "$(basename "$0")" == "run" ]]; then
     # Intent: Runit invokes both service `run` and `log/run` symlinks as
     # `./run`, so dispatch must use `$PWD` for the production path and `$0` for
-    # absolute-path manual debugging. Source: DI-011-20260518-050809
+    # absolute-path manual debugging. Source: DI-linod
     case "$0" in
       ./run|run)
         if [[ "$(basename "$PWD")" == "log" ]]; then

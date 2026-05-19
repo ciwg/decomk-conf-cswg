@@ -3,12 +3,12 @@
 # Shared helpers for decomk Codespaces selftests.
 # Intent: Keep Codespaces lifecycle behavior consistent across bootstrap capture
 # and GUI runtime selftests while leaving each top-level test script responsible
-# for its own assertions and artifact layout. Source: DI-013-20260518-054020
-# (TODO/013)
+# for its own assertions and artifact layout. Source: DI-tazit
+# (TODO-tozoh)
 
 # Intent: Keep selftests runnable in unattended contexts when GitHub's machine
 # lookup APIs return no result, while preserving --machine as the explicit
-# operator override. Source: DI-008-20260515-040231 (TODO/008)
+# operator override. Source: DI-kobih (TODO-riguz)
 # shellcheck disable=SC2034
 CODESPACE_SELFTEST_DEFAULT_MACHINE="basicLinux32gb"
 
@@ -147,7 +147,7 @@ codespace_selftest_create_codespace() {
   # Intent: Match the mob-sandbox pull-test pattern: avoid `--status` because it
   # can block or time out while waiting for post-create output, then discover the
   # created Codespace by display name and poll state explicitly. Source:
-  # DI-013-20260518-054020 (TODO/013)
+  # DI-tazit (TODO-tozoh)
   set +e
   "${cmd[@]}" 2>&1 | tee -a "$create_log"
   rc=${PIPESTATUS[0]}

@@ -6,7 +6,7 @@ set -euo pipefail
 # Ubuntu's PEP 668 guard requires --break-system-packages for that explicit
 # container-level mutation, and HOME=/root avoids root-owned pip writes under
 # the remote user's home directory.
-# Source: DI-010-20260516-035351 (TODO/010)
+# Source: DI-dadak (TODO-rifol)
 
 if [[ "$(id -u)" != "0" ]]; then
   echo "ERROR: Cocotb system install must run as root" >&2

@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Intent: Keep the current OSS CAD Suite install behavior in a normal script
-# while TODO 009 designs the future OCI-backed artifact cache.
-# Source: DI-010-20260516-035351 (TODO/010); follow-up: TODO/009.
+# while TODO-sapan designs the future OCI-backed artifact cache.
+# Source: DI-dadak (TODO-rifol); follow-up: TODO-sapan.
 
 oss_url="https://github.com/YosysHQ/oss-cad-suite-build/releases/download/2026-03-07/oss-cad-suite-linux-x64-20260307.tgz"
 archive_path="/tmp/oss-cad-suite.tgz"
@@ -43,7 +43,7 @@ trap - EXIT
 
 # Intent: Write a profile fragment with literal `$PATH` so login shells expand
 # their current path at session start instead of freezing this installer shell's
-# path at image setup time. Source: DI-010-20260516-035351 (TODO/010)
+# path at image setup time. Source: DI-dadak (TODO-rifol)
 # shellcheck disable=SC2016
 printf '%s\n' 'export PATH="/opt/oss-cad-suite/bin:$PATH"' >"$profile_path"
 chmod 0644 "$profile_path"

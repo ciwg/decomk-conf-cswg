@@ -1,22 +1,22 @@
-# 011 - Fix runit GUI service-name detection
+# TODO-dagij: Fix runit GUI service-name detection
 
 ## Decision Intent Log
 
-ID: DI-011-20260517-212822
+ID: DI-jitav
 Date: 2026-05-17 21:28:22 UTC
 Status: active
 Decision: Fix the decomk GUI runit service runner so symlinked `./run` invocations derive the service name from the current service directory instead of only from `$0`.
 Intent: Keep the existing single-script runit design for `xvfb`, `openbox`, `x11vnc`, and `novnc`, while preventing runit-managed services from exiting immediately with `ERROR: unsupported GUI runit service: .`.
 Constraints: Preserve existing service names and commands; keep manual absolute-path debugging of `/etc/sv/<service>/run` working; do not add generated per-service wrapper scripts unless a thought experiment proves the single-script approach is untenable.
-Affects: `bin/gui-runit-sync.sh`, `TODO/011-fix-runit-gui-service-detection.md`, `TODO/TODO.md`, and the `mob-sandbox` Codespaces GUI pull test.
+Affects: `bin/gui-runit-sync.sh`, `TODO/TODO-dagij-fix-runit-gui-service-detection.md`, `TODO/TODO.md`, and the `mob-sandbox` Codespaces GUI pull test.
 
-ID: DI-011-20260518-050809
+ID: DI-linod
 Date: 2026-05-18 05:08:09 UTC
 Status: active
 Decision: Apply the same current-directory-aware runit invocation handling to `main()` so service `run` and `log/run` symlinks dispatch to the correct runner when runit invokes either path as `./run`.
 Intent: Fix the complete single-script runit invocation path, not only service-name extraction, because production runit execution hides both the service name and the `log` directory marker from `$0`.
 Constraints: Preserve the existing single-script service layout; preserve absolute-path manual debugging; do not introduce generated wrapper scripts.
-Affects: `bin/gui-runit-sync.sh`, `TODO/011-fix-runit-gui-service-detection.md`, and the GUI service health validation path.
+Affects: `bin/gui-runit-sync.sh`, `TODO/TODO-dagij-fix-runit-gui-service-detection.md`, and the GUI service health validation path.
 
 ## Handoff Context
 
@@ -93,7 +93,7 @@ service_from_run_path() {
   # Intent: Runit changes into each service directory and executes `./run`, so
   # `$0` does not always include `/etc/service/<name>/run`. Use the current
   # directory for the production runit path while preserving absolute-path
-  # manual invocation for debugging. Source: DI-011-20260517-212822
+  # manual invocation for debugging. Source: DI-jitav
   case "$0" in
     ./run|run)
       run_dir="$PWD"
@@ -116,15 +116,15 @@ If the implementing Codex sees multiple plausible designs beyond this minimal pa
 
 ## Validation Plan
 
-- [x] 011.1 Add or update a DI entry in this TODO if the implementation differs from the recommended fix.
-- [x] 011.2 Patch `bin/gui-runit-sync.sh` so `service_from_run_path()` supports runit `./run` and manual absolute-path invocations.
-- [x] 011.3 Run `bash -n bin/gui-runit-sync.sh`.
-- [ ] 011.4 In a container or Codespace with GUI packages installed, confirm direct production-style invocation no longer reports service `.`:
+- [x] dagij.1 Add or update a DI entry in this TODO if the implementation differs from the recommended fix.
+- [x] dagij.2 Patch `bin/gui-runit-sync.sh` so `service_from_run_path()` supports runit `./run` and manual absolute-path invocations.
+- [x] dagij.3 Run `bash -n bin/gui-runit-sync.sh`.
+- [ ] dagij.4 In a container or Codespace with GUI packages installed, confirm direct production-style invocation no longer reports service `.`:
   - `cd /etc/service/xvfb && timeout 2 ./run`
   - `cd /etc/service/xvfb/log && timeout 2 ./run`
-- [ ] 011.5 Republish or otherwise test an image/config path that `mob-sandbox` can consume from `ghcr.io/ciwg/decomk-conf-cswg:main` or a chosen test channel.
-- [ ] 011.6 From `~/lab/mob-sandbox`, rerun `GUI_HEALTH_READY_TIMEOUT_SECONDS=60 GUI_HEALTH_STABLE_SECONDS=5 ./scripts/pull-test.sh` and confirm it passes the GUI health check.
-- [ ] 011.7 Inspect the passing Codespace to verify these are present as long-lived `vscode` processes: `Xvfb`, `openbox`, `x11vnc`, and `websockify`.
+- [ ] dagij.5 Republish or otherwise test an image/config path that `mob-sandbox` can consume from `ghcr.io/ciwg/decomk-conf-cswg:main` or a chosen test channel.
+- [ ] dagij.6 From `~/lab/mob-sandbox`, rerun `GUI_HEALTH_READY_TIMEOUT_SECONDS=60 GUI_HEALTH_STABLE_SECONDS=5 ./scripts/pull-test.sh` and confirm it passes the GUI health check.
+- [ ] dagij.7 Inspect the passing Codespace to verify these are present as long-lived `vscode` processes: `Xvfb`, `openbox`, `x11vnc`, and `websockify`.
 
 ## Acceptance Criteria
 

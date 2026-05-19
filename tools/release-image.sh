@@ -5,7 +5,7 @@ set -euo pipefail
 # while keeping the operator-supplied immutable tag exact. The script publishes
 # `${IMAGE}:${IMMUTABLE_TAG}` as typed and does not synthesize candidate,
 # timestamped immutable, stamp-controlled, or block-alias release tags.
-# Source: DI-006-20260510-144211
+# Source: DI-gozob
 
 usage() {
   cat <<'USAGE'
@@ -34,7 +34,7 @@ Options:
 
 Examples:
   tools/release-image.sh --immutable-tag block00-rc3 --channel main --channel testing
-  tools/release-image.sh --source ghcr.io/ciwg/decomk-conf-cswg:block00-rc3 --immutable-tag block00-rc3 --channel stable
+  tools/release-image.sh --source ghcr.io/ciwg/decomk-conf-cswg:block00-rc3 --immutable-tag block00 --channel stable
 USAGE
 }
 

@@ -1,8 +1,8 @@
-# TODO 010 - Move non-trivial Makefile shell logic into bin scripts
+# TODO-rifol: Move non-trivial Makefile shell logic into bin scripts
 
 ## Decision Intent Log
 
-ID: DI-010-20260516-035351
+ID: DI-dadak
 Date: 2026-05-16 03:53:51 UTC
 Status: active
 Decision: Keep `Makefile` responsible for the dependency graph and short command dispatch only; move non-trivial shell logic into reviewable scripts under `bin/`.
@@ -35,10 +35,10 @@ Keep `Makefile` readable as a target graph:
 
 ## Subtasks
 
-- [x] 010.1 Record the Makefile/script-boundary DI.
-- [x] 010.2 Move GUI runit reconciliation into `bin/gui-runit-sync.sh`.
-- [x] 010.3 Move GUI Desktop note writing into `bin/write-gui-desktop-note.sh`.
-- [x] 010.4 Move OSS CAD Suite installation into `bin/install-oss-cad-suite.sh`.
-- [x] 010.5 Move Cocotb installation into `bin/install-cocotb.sh` and make the dedicated-container system install explicit.
-- [x] 010.6 Move post-create user evidence writing into `bin/post-create-user-demo.sh`.
-- [x] 010.7 Simplify Makefile recipes to script calls and remove unnecessary recipe continuations.
+- [x] rifol.1 Record the Makefile/script-boundary DI.
+- [x] rifol.2 Move GUI runit reconciliation into `bin/gui-runit-sync.sh`.
+- [x] rifol.3 Move GUI Desktop note writing into `bin/write-gui-desktop-note.sh`.
+- [x] rifol.4 Move OSS CAD Suite installation into `bin/install-oss-cad-suite.sh`.
+- [x] rifol.5 Move Cocotb installation into `bin/install-cocotb.sh` and make the dedicated-container system install explicit.
+- [x] rifol.6 Move post-create user evidence writing into `bin/post-create-user-demo.sh`.
+- [x] rifol.7 Simplify Makefile recipes to script calls and remove unnecessary recipe continuations.

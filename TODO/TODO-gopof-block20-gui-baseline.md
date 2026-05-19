@@ -1,8 +1,8 @@
-# 012 - Build Block20 with baseline GUI desktop
+# TODO-gopof: Build Block20 with baseline GUI desktop
 
 ## Decision Intent Log
 
-ID: DI-012-20260517-213223
+ID: DI-rutoj
 Date: 2026-05-17 21:32:23 UTC
 Status: active
 Decision: Track `Block20` as the append-only baseline image block that installs and supervises the GUI desktop stack for every repository consuming the decomk baseline image.
@@ -24,43 +24,43 @@ non-GUI baseline and should not be retroactively redefined.
 
 ## Dependencies
 
-- [ ] 012.1 Resolve TODO 011 or otherwise prove runit-managed GUI services stay
+- [ ] gopof.1 Resolve TODO-dagij or otherwise prove runit-managed GUI services stay
   healthy under Codespaces startup.
-- [ ] 012.2 Confirm whether per-service runit `log/run` supervision is required
+- [ ] gopof.2 Confirm whether per-service runit `log/run` supervision is required
   or intentionally omitted for the GUI services.
-- [ ] 012.3 Confirm the security model for noVNC and x11vnc, including
+- [ ] gopof.3 Confirm the security model for noVNC and x11vnc, including
   localhost binding, forwarded ports, and VNC authentication assumptions.
-- [ ] 012.4 Confirm the expected desktop note path and owner for repos using the
+- [ ] gopof.4 Confirm the expected desktop note path and owner for repos using the
   baseline image.
 
 ## Implementation Plan
 
-- [ ] 012.5 Add a locked implementation DI before touching behavior-changing
+- [ ] gopof.5 Add a locked implementation DI before touching behavior-changing
   files.
-- [ ] 012.6 Move the GUI package and service prerequisites into the append-only
+- [ ] gopof.6 Move the GUI package and service prerequisites into the append-only
   `Block20` path.
-- [ ] 012.7 Ensure `xvfb`, `openbox`, `x11vnc`, and `novnc` are installed in the
+- [ ] gopof.7 Ensure `xvfb`, `openbox`, `x11vnc`, and `novnc` are installed in the
   image rather than reinstalled by each consumer repo.
-- [ ] 012.8 Ensure the runit service definitions are created repeatably and are
+- [ ] gopof.8 Ensure the runit service definitions are created repeatably and are
   active for every baseline image consumer.
-- [ ] 012.9 Ensure `postCreateGUIDesktopNote` still writes the expected note for
+- [ ] gopof.9 Ensure `postCreateGUIDesktopNote` still writes the expected note for
   the remote user.
-- [ ] 012.10 Update docs for how a repo consumes the `Block20` GUI baseline.
-- [ ] 012.11 Build, tag, and push a `Block20` release candidate image.
-- [ ] 012.12 Move the chosen channel tag only after a fresh consumer Codespace
+- [ ] gopof.10 Update docs for how a repo consumes the `Block20` GUI baseline.
+- [ ] gopof.11 Build, tag, and push a `Block20` release candidate image.
+- [ ] gopof.12 Move the chosen channel tag only after a fresh consumer Codespace
   validates GUI service health and noVNC connectivity.
 
 ## Validation Plan
 
-- [ ] 012.13 Run the decomk-conf-cswg selftest against the `Block20` image.
-- [ ] 012.14 Run a fresh `mob-sandbox` consumer pull test and confirm SSH,
+- [ ] gopof.13 Run the decomk-conf-cswg selftest against the `Block20` image.
+- [ ] gopof.14 Run a fresh `mob-sandbox` consumer pull test and confirm SSH,
   updateContent, postCreate, GUI service health, and noVNC WebSocket
   connectivity pass.
-- [ ] 012.15 Run or prepare the equivalent `fpga-workbench` consumer test, since
+- [ ] gopof.15 Run or prepare the equivalent `fpga-workbench` consumer test, since
   FPGA workflows also need GUI desktop support.
-- [ ] 012.16 Inspect `sv status` for `xvfb`, `openbox`, `x11vnc`, and `novnc`
+- [ ] gopof.16 Inspect `sv status` for `xvfb`, `openbox`, `x11vnc`, and `novnc`
   inside a fresh Codespace.
-- [ ] 012.17 Confirm the expected long-lived processes are present: `Xvfb`,
+- [ ] gopof.17 Confirm the expected long-lived processes are present: `Xvfb`,
   `openbox`, `x11vnc`, and `websockify`.
 
 ## Acceptance Criteria

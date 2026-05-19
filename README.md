@@ -78,6 +78,24 @@ For production updates:
    action tuple values in `decomk.conf`.
 3. Keep prior versioned stanzas for auditability and rollback context.
 
+## Coordination artifact IDs
+
+Use proquint handles for new coordination artifacts:
+
+- TODO files: `TODO/TODO-<handle>-<slug>.md`
+- TE files: `docs/thought-experiments/TE-<handle>-<slug>.md`
+- DI entries: `ID: DI-<handle>`
+
+Mint handles with:
+
+```bash
+cd tools/mint-handle
+go run . -r ../..
+```
+
+Historical integer and timestamp IDs remain discoverable through
+`numeric-proquint-xref.md` and `tools/migrate-handles/mapping.tsv`.
+
 ## Producer `.devcontainer` workflow
 
 The generated `.devcontainer/Dockerfile` and `build` stanza in
@@ -177,7 +195,7 @@ Promote an existing source image instead of rebuilding:
 ```bash
 tools/release-image.sh \
   --source ghcr.io/<org>/<image>:block00-rc3 \
-  --immutable-tag block00-rc3 \
+  --immutable-tag block00 \
   --channel stable
 ```
 

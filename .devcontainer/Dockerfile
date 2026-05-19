@@ -15,7 +15,7 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu-24.04
 # Intent: Pin raw apt-get and apt-pin package resolution to one image-owned APT
 # snapshot during producer-image bootstrap, then let later Block* transitions
 # advance the configured snapshot deliberately.
-# Source: DI-007-20260513-195450 (TODO/007)
+# Source: DI-fifaf (TODO-hopun)
 COPY bin/apt-pin /usr/local/bin/apt-pin
 RUN chmod 0755 /usr/local/bin/apt-pin 
 RUN printf 'APT::Snapshot "%s";\n' "20260430T000000Z" > /etc/apt/apt.conf.d/50snapshot 
@@ -34,12 +34,12 @@ RUN for f in $(/usr/lib/go-1.24/bin/go env GOROOT)/bin/*; do ln -s $f /usr/local
 # Intent: Keep local producer-image bootstrap reproducible as Ubuntu noble
 # security updates advance without changing the producer image's minimal,
 # GUI-neutral bootstrap contract.
-# Source: DI-004-20260430-194224 (TODO/004)
+# Source: DI-bonar (TODO-fogup)
 
 #
 # Intent: Before changing identity values, inspect the base image identities first.
 # Example: docker run --rm -it mcr.microsoft.com/devcontainers/base:ubuntu-24.04 cat /etc/passwd
-# Source: DI-001-20260425-113454 (decomk/TODO/001)
+# Source: DI-001-20260425-113454 (decomk/TODO-husig)
 #
 # stevegt: The above base image already includes a non-root user named
 # `vscode` with UID 1000, so we can skip the useradd step. 
@@ -63,12 +63,12 @@ ENV RUNIT_LOG_DIR=/var/log/runit
 # Intent: Keep decomk state and runit system paths in image-owned environment
 # variables so later stages consume one path contract instead of re-declaring
 # literals in multiple files.
-# Source: DI-004-20260501-182529 (TODO/004)
+# Source: DI-hafuj (TODO-fogup)
 RUN mkdir -p ${RUNIT_SV_DIR} ${RUNIT_SERVICE_DIR} ${RUNIT_LOG_DIR} /workspaces ${DECOMK_HOME} ${DECOMK_LOG_DIR} \
  && chown -R ${DECOMK_REMOTE_USER}:${DECOMK_REMOTE_USER} /workspaces ${DECOMK_HOME} ${DECOMK_LOG_DIR}
 
 # Intent: Run runit as the image's long-lived PID 1 contract so consumer repos
 # inherit a stable supervisor substrate while decomk later populates /etc/service
 # contextually.
-# Source: DI-004-20260430-182956 (TODO/004)
+# Source: DI-fiduv (TODO-fogup)
 ENTRYPOINT ["/usr/bin/runsvdir", "-P", "/etc/service"]

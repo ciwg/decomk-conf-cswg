@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Intent: Keep a runtime/user-level evidence hook that appends per-user entries
 # on every postCreate run without relying on stamp-skipped file targets.
-# Source: DI-002-20260423-182418 (TODO/002)
+# Source: DI-vusag (TODO-lusaz)
 
 user="${GITHUB_USER:-unknown-user}"
 dest_dir="${DECOMK_HOME:?DECOMK_HOME must be set}/users"

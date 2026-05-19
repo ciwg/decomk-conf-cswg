@@ -1,10 +1,10 @@
-# TE-20260513-180434 - apt-pin cache authority and first-run behavior
+# TE-fivis: apt-pin cache authority and first-run behavior
 
-TE ID: TE-20260513-180434
+TE ID: TE-fivis
 
 ## Decision under test
 
-For TODO 007, decide whether APT stabilization should start as an OCI cache that any first runner can populate, an explicit manual bundle/push workflow, or a snapshot-backed wrapper with OCI caching deferred behind the same user-facing command.
+For TODO-hopun, decide whether APT stabilization should start as an OCI cache that any first runner can populate, an explicit manual bundle/push workflow, or a snapshot-backed wrapper with OCI caching deferred behind the same user-facing command.
 
 ## Assumptions
 
@@ -66,7 +66,7 @@ Base image drift:
 - Keep C and D as future OCI/backend patterns, but only after trusted-writer detection and manifest design are locked.
 - Adopt E for v1: `apt-pin` is a small, snapshot-backed wrapper that fixes the current pin-rot problem while keeping the later OCI cache behind the same command.
 
-## Implications for TODO 007
+## Implications for TODO-hopun
 
 - `apt-pin` supersedes `apt-oci` as the immediate implementation.
 - APT's `APT::Snapshot` config becomes the required v1 configuration source.

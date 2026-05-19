@@ -9,7 +9,7 @@
   },
   // Intent: Honor the image entrypoint so published producer images can carry
   // the long-lived runit supervisor contract into consumer repos.
-  // Source: DI-004-20260430-182956 (TODO/004)
+  // Source: DI-fiduv (TODO-fogup)
   "overrideCommand": false,
   "containerEnv": {
     "DECOMK_CONF_URI": "git:https://github.com/ciwg/decomk-conf-cswg.git?ref=main",

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Intent: Replace the legacy popup reminder with a deterministic Desktop note so
 # GUI users still get clipboard guidance without notifier/autostart complexity.
-# Source: DI-004-20260430-182956 (TODO/004)
+# Source: DI-fiduv (TODO-fogup)
 
 remote_user="${DECOMK_REMOTE_USER:-}"
 
