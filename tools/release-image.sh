@@ -94,12 +94,16 @@ run_logged() {
     echo "Wrote output: $stdout_file"
     echo "Wrote log:    $log_file"
     return 0
+  else
+    local rc="$?"
+    # Intent: Capture the failing command status inside the `else` branch because
+    # Bash reports a bare `if` statement as success after the condition has
+    # failed. Returning the real command status stops later registry mutations
+    # after a failed build, pull, tag, or push. Source: DI-vuluf
+    echo "ERROR: command failed with rc=$rc: $command_display" >&2
+    echo "ERROR: see log: $log_file" >&2
+    return "$rc"
   fi
-
-  local rc="$?"
-  echo "ERROR: command failed with rc=$rc: $command_display" >&2
-  echo "ERROR: see log: $log_file" >&2
-  return "$rc"
 }
 
 infer_image() {

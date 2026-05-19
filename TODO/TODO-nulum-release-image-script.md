@@ -2,6 +2,14 @@
 
 ## Decision Intent Log
 
+ID: DI-vuluf
+Date: 2026-05-19 11:03:15 -0700
+Status: active
+Decision: Make `tools/release-image.sh` stop immediately when any logged release subcommand fails, preserving the failing command's real exit status.
+Intent: Prevent partial release runs from continuing into later Docker pushes after a failed checkpoint build, pull, tag, or push. A failed build must not be able to move a channel tag or push a stale local image.
+Constraints: Keep the existing command transcript artifacts; preserve dry-run behavior; do not hide the failing command's stdout/stderr paths; do not add fallback or retry behavior.
+Affects: `tools/release-image.sh`, `TODO/TODO-nulum-release-image-script.md`
+
 ID: DI-gozob
 Date: 2026-05-10 14:42:11 -0700
 Status: active
