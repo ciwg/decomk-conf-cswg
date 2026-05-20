@@ -23,7 +23,7 @@ Block00, Block10, and Block20 through an RC-tested release ladder.
 - [x] fogus.4 Update AGENTS and README guidance so new TODO, TE, and DI artifacts use proquint handles.
 - [x] fogus.5 Apply hyphen-name cleanup to Makefile targets and decomk contexts before any image build/tag/push work.
 - [x] fogus.6 Validate post-cleanup `decomk plan updateContent` and `decomk plan postCreate` for this repo, `mob-sandbox`, `fpga-workbench`, and the GUI selftest context.
-- [ ] fogus.7 Build and test `block00-rc1`; if it passes, promote the same digest to `block00` and move `main`.
+- [x] fogus.7 Build and test `block00-rc7`; if it passes, promote the same digest to `block00` and move `main`.
 - [ ] fogus.8 Advance the producer context to Block10, then build and test `block10-rc1`; if it passes, promote the same digest to `block10` and move `main`.
 - [ ] fogus.9 Make GUI default in Block20, then build and test `block20-rc1`; if it passes, promote the same digest to `block20` and move `main`.
 - [ ] fogus.10 Run consumer validation for `mob-sandbox` and `fpga-workbench` after each channel-moving release step.
