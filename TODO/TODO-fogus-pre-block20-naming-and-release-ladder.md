@@ -24,7 +24,7 @@ Block00, Block10, and Block20 through an RC-tested release ladder.
 - [x] fogus.5 Apply hyphen-name cleanup to Makefile targets and decomk contexts before any image build/tag/push work.
 - [x] fogus.6 Validate post-cleanup `decomk plan updateContent` and `decomk plan postCreate` for this repo, `mob-sandbox`, `fpga-workbench`, and the GUI selftest context.
 - [x] fogus.7 Build and test `block00-rc7`; if it passes, promote the same digest to `block00` and move `main`.
-- [ ] fogus.8 Advance the producer context to Block10, then build and test `block10-rc1`; if it passes, promote the same digest to `block10` and move `main`.
+- [ ] fogus.8 Switch `main` from devcontainer `build` to `ghcr.io/ciwg/decomk-conf-cswg:main`, advance the producer context to `Block10`, then build and test `block10-rc1`; if it passes, promote the same digest to `block10` and move `main`.
 - [ ] fogus.9 Make GUI default in Block20, then build and test `block20-rc1`; if it passes, promote the same digest to `block20` and move `main`.
 - [ ] fogus.10 Run consumer validation for `mob-sandbox` and `fpga-workbench` after each channel-moving release step.
 
@@ -49,6 +49,14 @@ tools/release-image.sh \
 The same pattern applies to `block00`, `block10`, and `block20`.  A failed RC is
 retired by moving forward to the next tag such as `block10-rc2`; no immutable
 tag is reused.
+
+## Block10 transition notes
+
+Before building `block10-rc1`, `main` must stop using the genesis `build`
+stanza. Update `.decomk/channels.json` so `channels.main` uses
+`image: ghcr.io/ciwg/decomk-conf-cswg:main`, render
+`.devcontainer/devcontainer.json`, then advance the `decomk-conf-cswg` context
+from `Block00` to `Block10`.
 
 ## Acceptance criteria
 
