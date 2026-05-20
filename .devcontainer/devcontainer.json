@@ -3,10 +3,7 @@
 // Source: DI-017-20260507-133819 (TODO/017)
 {
   "name": "decomk-conf-cswg",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": ".."
-  },
+  "image": "ghcr.io/ciwg/decomk-conf-cswg:main",
   // Intent: Honor the image entrypoint so published producer images can carry
   // the long-lived runit supervisor contract into consumer repos.
   // Source: DI-fiduv (TODO-fogup)

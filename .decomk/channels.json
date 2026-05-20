@@ -20,10 +20,7 @@
   },
   "channels": {
     "main": {
-      "build": {
-        "dockerfile": "Dockerfile",
-        "context": ".."
-      },
+      "image": "ghcr.io/ciwg/decomk-conf-cswg:main",
       "containerEnv": {
         "DECOMK_TOOL_URI": "go:github.com/stevegt/decomk/cmd/decomk@main",
         "DECOMK_CONF_URI": "git:https://github.com/ciwg/decomk-conf-cswg.git?ref=main"
